@@ -311,40 +311,47 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
               <p className="text-muted-foreground">Loading calendar...</p>
             </div>
           </div>
-        ) : sessions.length === 0 ? (
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <p className="text-muted-foreground mb-2">No sessions found for this time period</p>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create First Session
-              </Button>
-            </div>
-          </div>
         ) : (
-          <Calendar
-            localizer={localizer}
-            events={calendarEvents}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: 600 }}
-            view={currentView}
-            date={currentDate}
-            onNavigate={onNavigate}
-            onView={onView}
-            onSelectSlot={handleSelectSlot}
-            onSelectEvent={handleSelectEvent}
-            selectable
-            popup
-            eventPropGetter={eventStyleGetter}
-            components={{
-              toolbar: CustomToolbar
-            }}
-            step={30}
-            timeslots={2}
-            min={new Date(0, 0, 0, 6, 0, 0)} // 6 AM
-            max={new Date(0, 0, 0, 22, 0, 0)} // 10 PM
-          />
+          <>
+            <Calendar
+              localizer={localizer}
+              events={calendarEvents}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: 600 }}
+              view={currentView}
+              date={currentDate}
+              onNavigate={onNavigate}
+              onView={onView}
+              onSelectSlot={handleSelectSlot}
+              onSelectEvent={handleSelectEvent}
+              selectable
+              popup
+              eventPropGetter={eventStyleGetter}
+              components={{
+                toolbar: CustomToolbar
+              }}
+              step={30}
+              timeslots={2}
+              min={new Date(0, 0, 0, 6, 0, 0)} // 6 AM
+              max={new Date(0, 0, 0, 22, 0, 0)} // 10 PM
+            />
+            
+            {/* Show helpful message when no sessions exist */}
+            {sessions.length === 0 && (
+              <div className="mt-4 p-4 bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/20">
+                <div className="text-center">
+                  <p className="text-muted-foreground mb-2">
+                    No sessions scheduled for this time period. Click on any time slot to create a new session.
+                  </p>
+                  <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Session
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
 
