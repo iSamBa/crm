@@ -58,15 +58,18 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
     };
   }, [currentDate, currentView]);
 
+  // Memoize the filters to prevent infinite re-renders
+  const sessionFilters = useMemo(() => ({
+    trainerId: filters.trainerId === 'all' ? undefined : filters.trainerId,
+    memberId: filters.memberId === 'all' ? undefined : filters.memberId,
+    type: filters.sessionType === 'all' ? undefined : filters.sessionType as TrainingSession['type'],
+    status: filters.status === 'all' ? undefined : filters.status as TrainingSession['status']
+  }), [filters.trainerId, filters.memberId, filters.sessionType, filters.status]);
+
   const { sessions, isLoading, refetch } = useCalendarSessions(
     dateRange.start,
     dateRange.end,
-    {
-      trainerId: filters.trainerId === 'all' ? undefined : filters.trainerId,
-      memberId: filters.memberId === 'all' ? undefined : filters.memberId,
-      type: filters.sessionType === 'all' ? undefined : filters.sessionType as TrainingSession['type'],
-      status: filters.status === 'all' ? undefined : filters.status as TrainingSession['status']
-    }
+    sessionFilters
   );
 
   // Transform sessions for calendar display
@@ -81,11 +84,7 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
     }));
   }, [sessions]);
 
-  // Handle slot selection (creating new session)
-  const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-    setCreateSlot(slotInfo);
-    setIsCreateModalOpen(true);
-  }, []);
+  // Slot selection disabled - use create button instead
 
   // Handle event selection (viewing existing session)
   const handleSelectEvent = useCallback((event: any) => {
@@ -102,57 +101,31 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
     setCurrentView(newView);
   }, []);
 
-  // Event styling based on session properties
+  // Modern event styling based on session properties
   const eventStyleGetter = useCallback((event: any) => {
     const session: TrainingSession = event.resource;
     
-    let backgroundColor = '#3174ad';
-    let borderColor = '#265985';
-    
-    // Color by session type
-    switch (session.type) {
-      case 'personal':
-        backgroundColor = '#059669'; // green
-        borderColor = '#047857';
-        break;
-      case 'group':
-        backgroundColor = '#dc2626'; // red
-        borderColor = '#b91c1c';
-        break;
-      case 'class':
-        backgroundColor = '#7c3aed'; // purple
-        borderColor = '#6d28d9';
-        break;
-      case 'assessment':
-        backgroundColor = '#ea580c'; // orange
-        borderColor = '#c2410c';
-        break;
-      case 'consultation':
-        backgroundColor = '#0891b2'; // cyan
-        borderColor = '#0e7490';
-        break;
-      case 'rehabilitation':
-        backgroundColor = '#be185d'; // pink
-        borderColor = '#9d174d';
-        break;
-    }
+    // All session types use consistent primary color
 
-    // Adjust opacity based on status
+    // Status-based opacity adjustments
+    let opacity = '1';
     if (session.status === 'cancelled' || session.status === 'no_show') {
-      backgroundColor += '80'; // 50% opacity
+      opacity = '0.6';
     } else if (session.status === 'completed') {
-      backgroundColor += 'b3'; // 70% opacity
+      opacity = '0.8';
     }
 
     return {
       style: {
-        backgroundColor,
-        borderColor,
+        backgroundColor: 'oklch(0.65 0.22 28)',
+        border: 'none',
         color: 'white',
-        border: '1px solid ' + borderColor,
-        borderRadius: '4px',
-        fontSize: '12px',
-        padding: '2px 4px'
+        borderRadius: '8px',
+        fontSize: '13px',
+        fontWeight: '600',
+        opacity,
+        boxShadow: '0 2px 4px 0 rgb(0 0 0 / 0.1)',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
       }
     };
   }, []);
@@ -164,7 +137,7 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
       const endOfWeek = moment(currentDate).endOf('week');
       return `${startOfWeek.format('MMM D')} - ${endOfWeek.format('MMM D, YYYY')}`;
     }
-    return label;
+    return moment(currentDate).format('MMMM YYYY');
   };
 
   // Year navigation
@@ -176,45 +149,72 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
     setCurrentDate(newDate);
   };
 
-  // Custom toolbar
+  // Custom event component for better text layout
+  const CustomEvent = ({ event }: { event: any }) => {
+    const session = event.resource;
+    const memberName = session.member 
+      ? `${session.member.firstName} ${session.member.lastName}`
+      : `Member ID: ${session.memberId}`;
+    const trainerName = session.trainer 
+      ? `${session.trainer.firstName} ${session.trainer.lastName}`
+      : `Trainer ID: ${session.trainerId}`;
+
+    return (
+      <div className="h-full flex flex-col justify-start text-xs">
+        <div className="font-semibold text-[12px] leading-tight mb-0.5 truncate">
+          {session.title}
+        </div>
+        <div className="text-[11px] leading-tight opacity-90 truncate">
+          {memberName}
+        </div>
+        <div className="text-[11px] leading-tight opacity-90 truncate">
+          {trainerName}
+        </div>
+      </div>
+    );
+  };
+
+  // Modern custom toolbar
   const CustomToolbar = ({ onNavigate, onView }: any) => (
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1">
+    <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-background to-muted/30 rounded-lg border shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm border">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onNavigate('PREV')}
             title={currentView === 'week' ? 'Previous Week' : 'Previous'}
+            className="hover:bg-muted"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onNavigate('TODAY')}
-            className="px-3"
+            className="px-4 font-medium hover:bg-primary hover:text-primary-foreground"
           >
             Today
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onNavigate('NEXT')}
             title={currentView === 'week' ? 'Next Week' : 'Next'}
+            className="hover:bg-muted"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
         
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold">
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             {getWeekRange()}
           </span>
           
-          {/* Year Selector for quick year navigation */}
+          {/* Year Selector with modern styling */}
           <Select value={currentYear.toString()} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-20">
+            <SelectTrigger className="w-20 border-0 bg-muted/50 focus:ring-1 focus:ring-primary">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -228,20 +228,23 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
         </div>
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <Select value={currentView} onValueChange={(value: View) => onView(value)}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-32 border-0 bg-muted/50 focus:ring-1 focus:ring-primary">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="week">Week</SelectItem>
-            <SelectItem value="month">Month</SelectItem>
-            <SelectItem value="day">Day</SelectItem>
-            <SelectItem value="agenda">Agenda</SelectItem>
+            <SelectItem value="week">📅 Week</SelectItem>
+            <SelectItem value="month">🗓️ Month</SelectItem>
+            <SelectItem value="day">📍 Day</SelectItem>
+            <SelectItem value="agenda">📋 Agenda</SelectItem>
           </SelectContent>
         </Select>
         
-        <Button onClick={() => setIsCreateModalOpen(true)}>
+        <Button 
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all duration-200"
+        >
           <Plus className="h-4 w-4 mr-2" />
           New Session
         </Button>
@@ -297,7 +300,7 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
           <Badge className="bg-green-600">Personal</Badge>
           <Badge className="bg-red-600">Group</Badge>
           <Badge className="bg-purple-600">Class</Badge>
-          <Badge className="bg-orange-600">Assessment</Badge>
+          <Badge className="bg-primary">Assessment</Badge>
           <Badge className="bg-cyan-600">Consultation</Badge>
           <Badge className="bg-pink-600">Rehabilitation</Badge>
         </div>
@@ -318,36 +321,40 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
               events={calendarEvents}
               startAccessor="start"
               endAccessor="end"
-              style={{ height: 600 }}
+              style={{ height: 'auto' }}
               view={currentView}
               date={currentDate}
               onNavigate={onNavigate}
               onView={onView}
-              onSelectSlot={handleSelectSlot}
               onSelectEvent={handleSelectEvent}
-              selectable
+              selectable={false}
               popup
               eventPropGetter={eventStyleGetter}
               components={{
-                toolbar: CustomToolbar
+                toolbar: CustomToolbar,
+                event: CustomEvent
               }}
-              step={30}
-              timeslots={2}
-              min={new Date(0, 0, 0, 6, 0, 0)} // 6 AM
-              max={new Date(0, 0, 0, 22, 0, 0)} // 10 PM
+              step={15}
+              timeslots={4}
+              formats={{
+                timeGutterFormat: 'HH:mm',
+                dayRangeHeaderFormat: ({ start, end }, culture, localizer) =>
+                  `${localizer?.format(start, 'MMM DD', culture)} - ${localizer?.format(end, 'MMM DD', culture)}`,
+                agendaTimeFormat: 'HH:mm',
+                agendaTimeRangeFormat: ({ start, end }, culture, localizer) =>
+                  `${localizer?.format(start, 'HH:mm', culture)} - ${localizer?.format(end, 'HH:mm', culture)}`
+              }}
+              min={new Date(0, 0, 0, 9, 0, 0)} // 9 AM
+              max={new Date(0, 0, 0, 21, 0, 0)} // 9 PM
             />
             
             {/* Show helpful message when no sessions exist */}
             {sessions.length === 0 && (
               <div className="mt-4 p-4 bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/20">
                 <div className="text-center">
-                  <p className="text-muted-foreground mb-2">
-                    No sessions scheduled for this time period. Click on any time slot to create a new session.
+                  <p className="text-muted-foreground">
+                    No sessions scheduled for this time period. Use the &quot;New Session&quot; button above to create a session.
                   </p>
-                  <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Session
-                  </Button>
                 </div>
               </div>
             )}

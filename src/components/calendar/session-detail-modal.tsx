@@ -158,7 +158,7 @@ export function SessionDetailModal({
       case 'personal': return 'bg-green-600';
       case 'group': return 'bg-red-600';
       case 'class': return 'bg-purple-600';
-      case 'assessment': return 'bg-orange-600';
+      case 'assessment': return 'bg-primary';
       case 'consultation': return 'bg-cyan-600';
       case 'rehabilitation': return 'bg-pink-600';
       default: return 'bg-gray-600';
@@ -180,7 +180,7 @@ export function SessionDetailModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="!max-w-[67vw] !w-[67vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -345,12 +345,12 @@ export function SessionDetailModal({
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Member:</span>
-                      <span>Member ID: {session.memberId}</span>
+                      <span>{session.member ? `${session.member.firstName} ${session.member.lastName}` : `Member ID: ${session.memberId}`}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Trainer:</span>
-                      <span>Trainer ID: {session.trainerId}</span>
+                      <span>{session.trainer ? `${session.trainer.firstName} ${session.trainer.lastName}` : `Trainer ID: ${session.trainerId}`}</span>
                     </div>
                     {session.cost && (
                       <div className="flex items-center gap-2">

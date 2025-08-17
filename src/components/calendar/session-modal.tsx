@@ -88,7 +88,7 @@ export function SessionModal({
   const { createSession, updateSession, isLoading } = useSessionActions();
   const { checkConflicts, isChecking } = useConflictCheck();
   const { members } = useMembers({ searchTerm: memberSearch });
-  const { trainers } = useTrainers();
+  const { trainers, isLoading: trainersLoading, error: trainersError } = useTrainers();
 
   const isEditing = !!session;
 
@@ -192,7 +192,7 @@ export function SessionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!max-w-[67vw] !w-[67vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Edit Session' : 'Create New Session'}
@@ -429,17 +429,25 @@ export function SessionModal({
                           <FormControl>
                             <Select value={field.value} onValueChange={field.onChange}>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a trainer" />
+                                <SelectValue placeholder={trainersLoading ? "Loading trainers..." : "Select a trainer"} />
                               </SelectTrigger>
                               <SelectContent>
-                                {availableTrainers.map((trainer) => (
-                                  <SelectItem key={trainer.id} value={trainer.id}>
-                                    {trainer.name}
-                                    <Badge variant="outline" className="ml-2 text-xs">
-                                      {trainer.specialization}
-                                    </Badge>
-                                  </SelectItem>
-                                ))}
+                                {trainersLoading ? (
+                                  <SelectItem value="" disabled>Loading trainers...</SelectItem>
+                                ) : trainersError ? (
+                                  <SelectItem value="" disabled>Error loading trainers: {trainersError}</SelectItem>
+                                ) : availableTrainers.length === 0 ? (
+                                  <SelectItem value="" disabled>No trainers found</SelectItem>
+                                ) : (
+                                  availableTrainers.map((trainer) => (
+                                    <SelectItem key={trainer.id} value={trainer.id}>
+                                      {trainer.name}
+                                      <Badge variant="outline" className="ml-2 text-xs">
+                                        {trainer.specialization}
+                                      </Badge>
+                                    </SelectItem>
+                                  ))
+                                )}
                               </SelectContent>
                             </Select>
                           </FormControl>
