@@ -1,6 +1,7 @@
 'use client';
 
 import { SessionCalendar } from '@/components/calendar/session-calendar';
+import { FullCalendarSession } from '@/components/calendar/fullcalendar-session';
 import { AdminLayout } from '@/components/layout/admin-layout';
 
 export default function AdminCalendarPage() {
@@ -14,8 +15,17 @@ export default function AdminCalendarPage() {
           </p>
         </div>
 
-        <div className="relative">
-          <SessionCalendar />
+        <div className="relative space-y-6">
+          {/* New FullCalendar Implementation */}
+          <FullCalendarSession />
+          
+          {/* Original react-big-calendar (for comparison) */}
+          <details className="mt-8">
+            <summary className="cursor-pointer text-sm text-muted-foreground mb-4">
+              Show Original Calendar (react-big-calendar)
+            </summary>
+            <SessionCalendar />
+          </details>
         </div>
       </div>
     </AdminLayout>
