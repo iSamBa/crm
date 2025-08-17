@@ -34,7 +34,6 @@ import {
   Trash2, 
   Filter, 
   Download,
-  Upload,
   Eye,
   ChevronLeft,
   ChevronRight,
@@ -224,10 +223,6 @@ export default function MembersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
-            Import
-          </Button>
           <Button 
             variant="outline" 
             onClick={handleExportMembers}
