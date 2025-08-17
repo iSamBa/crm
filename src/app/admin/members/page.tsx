@@ -47,6 +47,7 @@ import { useMembers, useMemberActions } from '@/lib/hooks/use-members';
 import { testMemberAccess } from '@/lib/debug/test-member-access';
 import { MemberDetailView } from '@/components/members/member-detail-view';
 import { MemberDistributionChart } from '@/components/charts/member-distribution-chart';
+import { memberService } from '@/lib/services/member-service';
 
 export default function MembersPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,6 +58,7 @@ export default function MembersPage() {
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+  const [isExporting, setIsExporting] = useState(false);
   const itemsPerPage = 10;
 
   // Use the new hooks
@@ -163,6 +165,29 @@ export default function MembersPage() {
     setViewMode('list');
   };
 
+  const handleExportMembers = async () => {
+    setIsExporting(true);
+    
+    try {
+      // Export with current filters applied
+      const result = await memberService.exportMembersToCSV({
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        searchTerm: searchTerm || undefined,
+      });
+
+      if (!result.success) {
+        console.error('Export failed:', result.error);
+        alert('Failed to export members: ' + (result.error || 'Unknown error'));
+      }
+      // Success is handled by the download trigger
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export members');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // If viewing member detail, show the detail view
   if (viewMode === 'detail' && selectedMemberId) {
     return (
@@ -203,9 +228,13 @@ export default function MembersPage() {
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
-          <Button variant="outline">
+          <Button 
+            variant="outline" 
+            onClick={handleExportMembers}
+            disabled={isExporting}
+          >
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {isExporting ? 'Exporting...' : 'Export'}
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>

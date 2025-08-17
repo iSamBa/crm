@@ -1,5 +1,13 @@
 import { supabase } from '@/lib/supabase/client';
 import { Member } from '@/types';
+import { 
+  arrayToCSV, 
+  downloadCSV, 
+  formatDateForCSV, 
+  formatArrayForCSV, 
+  formatObjectForCSV,
+  CSVColumn 
+} from '@/lib/utils/csv-export';
 
 export interface CreateMemberData {
   firstName: string;
@@ -459,6 +467,52 @@ class MemberService {
       createdAt: dbMember.created_at || new Date().toISOString(),
       updatedAt: dbMember.updated_at || new Date().toISOString(),
     };
+  }
+
+  // Export members to CSV
+  async exportMembersToCSV(filters?: MemberFilters): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Get all members with filters applied
+      const { data: members, error } = await this.getMembers(filters);
+      
+      if (error) {
+        return { success: false, error };
+      }
+
+      if (!members || members.length === 0) {
+        return { success: false, error: 'No members found to export' };
+      }
+
+      // Define CSV columns
+      const columns: CSVColumn[] = [
+        { key: 'firstName', header: 'First Name' },
+        { key: 'lastName', header: 'Last Name' },
+        { key: 'email', header: 'Email' },
+        { key: 'phone', header: 'Phone' },
+        { key: 'membershipStatus', header: 'Membership Status' },
+        { key: 'joinDate', header: 'Join Date', formatter: formatDateForCSV },
+        { key: 'emergencyContact', header: 'Emergency Contact', formatter: formatObjectForCSV },
+        { key: 'medicalConditions', header: 'Medical Conditions' },
+        { key: 'fitnessGoals', header: 'Fitness Goals' },
+        { key: 'preferredTrainingTimes', header: 'Preferred Training Times', formatter: formatArrayForCSV },
+        { key: 'createdAt', header: 'Created Date', formatter: formatDateForCSV },
+      ];
+
+      // Convert to CSV
+      const csvContent = arrayToCSV(members, columns);
+      
+      // Generate filename with current date
+      const currentDate = new Date().toISOString().split('T')[0];
+      const filename = `members-export-${currentDate}.csv`;
+      
+      // Trigger download
+      downloadCSV(csvContent, filename);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error exporting members to CSV:', error);
+      return { success: false, error: 'Failed to export members' };
+    }
   }
 }
 
