@@ -250,7 +250,7 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
   );
 
   return (
-    <Card className={className}>
+    <Card className={`calendar-container ${className || ''}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">

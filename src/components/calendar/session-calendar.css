@@ -1,11 +1,22 @@
 /* Google Calendar-inspired styling for react-big-calendar */
 
+/* Ensure calendar container doesn't interfere with layout */
+.calendar-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .rbc-calendar {
   font-family: inherit;
   background: white;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  position: relative;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Header styling */
@@ -160,7 +171,7 @@
   border-radius: 6px;
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   padding: 8px;
-  z-index: 1000;
+  z-index: 100;
 }
 
 .rbc-overlay-header {

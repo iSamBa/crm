@@ -14,7 +14,9 @@ export default function AdminCalendarPage() {
           </p>
         </div>
 
-        <SessionCalendar />
+        <div className="relative">
+          <SessionCalendar />
+        </div>
       </div>
     </AdminLayout>
   );
