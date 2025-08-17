@@ -1,0 +1,56 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { memberService } from '@/lib/services/member-service';
+
+export async function POST(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { success, error } = await memberService.freezeMembership(params.id);
+
+    if (!success) {
+      return NextResponse.json(
+        { error, message: 'Failed to freeze membership' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Membership frozen successfully' 
+    });
+  } catch (error) {
+    console.error('API Error - POST /api/members/[id]/freeze:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { success, error } = await memberService.unfreezeMembership(params.id);
+
+    if (!success) {
+      return NextResponse.json(
+        { error, message: 'Failed to unfreeze membership' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Membership unfrozen successfully' 
+    });
+  } catch (error) {
+    console.error('API Error - DELETE /api/members/[id]/freeze:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
