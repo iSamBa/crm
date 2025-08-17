@@ -1,0 +1,271 @@
+/* Google Calendar-inspired styling for react-big-calendar */
+
+.rbc-calendar {
+  font-family: inherit;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Header styling */
+.rbc-header {
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 8px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Time gutter (left side time labels) */
+.rbc-time-gutter {
+  background: hsl(var(--background));
+  border-right: 1px solid hsl(var(--border));
+  width: 60px;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-time-slot {
+  border-top: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  text-align: right;
+  padding-right: 8px;
+}
+
+.rbc-label {
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+}
+
+/* Calendar grid */
+.rbc-time-content {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-time-column {
+  border-left: 1px solid hsl(var(--border));
+  min-height: 48px;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  transition: background-color 0.15s ease;
+}
+
+.rbc-day-slot .rbc-time-slot:hover {
+  background: hsl(var(--muted) / 0.5);
+  cursor: pointer;
+}
+
+/* Current time indicator */
+.rbc-current-time-indicator {
+  background-color: hsl(var(--primary));
+  height: 2px;
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+}
+
+.rbc-current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: -5px;
+  width: 12px;
+  height: 12px;
+  background-color: hsl(var(--primary));
+  border-radius: 50%;
+}
+
+/* Event styling */
+.rbc-event {
+  border: none;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rbc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  z-index: 10;
+}
+
+.rbc-event:focus {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.rbc-event-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rbc-event-label {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* Selected event */
+.rbc-selected {
+  box-shadow: 0 0 0 2px hsl(var(--primary));
+}
+
+/* Today highlighting */
+.rbc-today {
+  background-color: hsl(var(--primary) / 0.05);
+}
+
+.rbc-header.rbc-today {
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+
+/* Weekend styling */
+.rbc-off-range {
+  color: hsl(var(--muted-foreground));
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+.rbc-off-range-bg {
+  background-color: hsl(var(--muted) / 0.2);
+}
+
+/* Popup styling */
+.rbc-overlay {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  padding: 8px;
+  z-index: 1000;
+}
+
+.rbc-overlay-header {
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+/* Selection styling */
+.rbc-slot-selection {
+  background-color: hsl(var(--primary) / 0.2);
+  border: 1px solid hsl(var(--primary));
+  border-radius: 3px;
+  z-index: 10;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rbc-time-gutter {
+    width: 50px;
+  }
+  
+  .rbc-label {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+  
+  .rbc-event {
+    font-size: 11px;
+    padding: 2px 4px;
+  }
+  
+  .rbc-header {
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+}
+
+/* Better scrollbar for webkit browsers */
+.rbc-time-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rbc-time-content::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+.rbc-time-content::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+.rbc-time-content::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Custom animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rbc-event {
+  animation: slideIn 0.2s ease-out;
+}
+
+/* More prominent "now" line */
+.rbc-now {
+  background-color: hsl(var(--primary));
+  height: 2px;
+  z-index: 10;
+}
+
+/* Improve readability of time labels */
+.rbc-label {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+/* Better spacing for all-day events */
+.rbc-allday-cell {
+  background: hsl(var(--muted) / 0.3);
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-row-bg {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-date-cell {
+  padding: 8px;
+  text-align: center;
+  border-right: 1px solid hsl(var(--border));
+}
+
+.rbc-button-link {
+  color: hsl(var(--primary));
+  font-weight: 500;
+}

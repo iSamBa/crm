@@ -25,6 +25,7 @@ import { TrainingSession } from '@/lib/services/session-service';
 import { SessionModal } from './session-modal';
 import { SessionDetailModal } from './session-detail-modal';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './session-calendar.css';
 
 const localizer = momentLocalizer(moment);
 
@@ -34,7 +35,7 @@ interface SessionCalendarProps {
 
 export function SessionCalendar({ className }: SessionCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<View>('month');
+  const [currentView, setCurrentView] = useState<View>('week');
   const [selectedSession, setSelectedSession] = useState<TrainingSession | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -156,32 +157,75 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
     };
   }, []);
 
+  // Get current week range for display
+  const getWeekRange = () => {
+    if (currentView === 'week') {
+      const startOfWeek = moment(currentDate).startOf('week');
+      const endOfWeek = moment(currentDate).endOf('week');
+      return `${startOfWeek.format('MMM D')} - ${endOfWeek.format('MMM D, YYYY')}`;
+    }
+    return label;
+  };
+
+  // Year navigation
+  const currentYear = moment(currentDate).year();
+  const years = Array.from({ length: 10 }, (_, i) => currentYear - 5 + i);
+
+  const handleYearChange = (year: string) => {
+    const newDate = moment(currentDate).year(parseInt(year)).toDate();
+    setCurrentDate(newDate);
+  };
+
   // Custom toolbar
-  const CustomToolbar = ({ label, onNavigate, onView }: any) => (
+  const CustomToolbar = ({ onNavigate, onView }: any) => (
     <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onNavigate('PREV')}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onNavigate('TODAY')}
-        >
-          Today
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onNavigate('NEXT')}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-        <span className="text-lg font-semibold ml-4">{label}</span>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigate('PREV')}
+            title={currentView === 'week' ? 'Previous Week' : 'Previous'}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigate('TODAY')}
+            className="px-3"
+          >
+            Today
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigate('NEXT')}
+            title={currentView === 'week' ? 'Next Week' : 'Next'}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-semibold">
+            {getWeekRange()}
+          </span>
+          
+          {/* Year Selector for quick year navigation */}
+          <Select value={currentYear.toString()} onValueChange={handleYearChange}>
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map(year => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <div className="flex items-center gap-2">
@@ -190,8 +234,8 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="month">Month</SelectItem>
             <SelectItem value="week">Week</SelectItem>
+            <SelectItem value="month">Month</SelectItem>
             <SelectItem value="day">Day</SelectItem>
             <SelectItem value="agenda">Agenda</SelectItem>
           </SelectContent>
