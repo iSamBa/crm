@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react';
-import { subscriptionService, Subscription, MembershipPlan, CreateSubscriptionData, UpdateSubscriptionData } from '@/lib/services/subscription-service';
+import { useState, useEffect, useCallback } from 'react';
+import { 
+  subscriptionService, 
+  Subscription, 
+  MembershipPlan, 
+  CreateSubscriptionData, 
+  UpdateSubscriptionData,
+  SubscriptionWithMember,
+  SubscriptionFilters,
+  SubscriptionStats
+} from '@/lib/services/subscription-service';
 
 export function useMembershipPlans() {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
@@ -112,5 +121,81 @@ export function useSubscriptionActions() {
     freezeSubscription,
     reactivateSubscription,
     isLoading
+  };
+}
+
+// Admin-specific hooks for subscriptions management
+
+export function useAllSubscriptions(filters?: SubscriptionFilters) {
+  const [subscriptions, setSubscriptions] = useState<SubscriptionWithMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchSubscriptions = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error: fetchError } = await subscriptionService.getAllSubscriptions(filters);
+      
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setSubscriptions(data);
+      }
+    } catch (err) {
+      console.error('Unexpected error in fetchSubscriptions:', err);
+      setError('Unexpected error occurred');
+    }
+    
+    setIsLoading(false);
+  }, [filters]);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [fetchSubscriptions]);
+
+  return {
+    subscriptions,
+    isLoading,
+    error,
+    refetch: fetchSubscriptions
+  };
+}
+
+export function useSubscriptionStats() {
+  const [stats, setStats] = useState<SubscriptionStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error: fetchError } = await subscriptionService.getSubscriptionStats();
+      
+      if (fetchError) {
+        setError(fetchError);
+      } else {
+        setStats(data);
+      }
+    } catch (err) {
+      console.error('Unexpected error in fetchStats:', err);
+      setError('Unexpected error occurred');
+    }
+    
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  return {
+    stats,
+    isLoading,
+    error,
+    refetch: fetchStats
   };
 }

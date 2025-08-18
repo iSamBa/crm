@@ -13,15 +13,24 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useMembershipPlans, useSubscriptionActions } from '@/lib/hooks/use-subscriptions';
+import { useMembers } from '@/lib/hooks/use-members';
 import { subscriptionService } from '@/lib/services/subscription-service';
-import { Check } from 'lucide-react';
+import { Check, User } from 'lucide-react';
 
 const subscriptionSchema = z.object({
+  memberId: z.string().min(1, 'Please select a member'),
   planId: z.string().min(1, 'Please select a membership plan'),
   startDate: z.string().min(1, 'Start date is required'),
   autoRenew: z.boolean(),
@@ -31,18 +40,20 @@ const subscriptionSchema = z.object({
 type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
 
 interface SubscriptionFormProps {
-  memberId: string;
+  memberId?: string;
   onSuccess?: () => void;
 }
 
 export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const { plans, isLoading: plansLoading } = useMembershipPlans();
+  const { members, isLoading: membersLoading } = useMembers({});
   const { createSubscription, isLoading } = useSubscriptionActions();
 
   const form = useForm<SubscriptionFormData>({
     resolver: zodResolver(subscriptionSchema),
     defaultValues: {
+      memberId: memberId || '',
       planId: '',
       startDate: new Date().toISOString().split('T')[0],
       autoRenew: true,
@@ -59,7 +70,7 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
     const endDate = subscriptionService.calculateEndDate(data.startDate, selectedPlan.duration);
 
     const subscriptionData = {
-      memberId,
+      memberId: data.memberId,
       planId: data.planId,
       startDate: data.startDate,
       endDate,
@@ -83,7 +94,7 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
     form.setValue('planId', planId);
   };
 
-  if (plansLoading) {
+  if (plansLoading || membersLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -91,8 +102,70 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
     );
   }
 
+  const selectedMember = members.find(member => member.id === form.watch('memberId'));
+
   return (
     <div className="space-y-6">
+      {/* Member Selection (only if memberId not provided) */}
+      {!memberId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Select Member
+            </CardTitle>
+            <CardDescription>
+              Choose the member for this subscription
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="memberId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Member</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a member" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div className="font-medium">
+                                {member.firstName} {member.lastName}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {member.email}
+                              </div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {selectedMember && (
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <div className="font-medium">
+                  {selectedMember.firstName} {selectedMember.lastName}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {selectedMember.email} • Status: {selectedMember.membershipStatus}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Membership Plans Selection */}
       <div>
         <h3 className="text-lg font-semibold mb-4">Select Membership Plan</h3>

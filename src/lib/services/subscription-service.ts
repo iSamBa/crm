@@ -41,6 +41,34 @@ export interface UpdateSubscriptionData {
   price?: number;
 }
 
+export interface SubscriptionFilters {
+  status?: string;
+  memberId?: string;
+  planId?: string;
+  startDate?: string;
+  endDate?: string;
+  searchTerm?: string;
+}
+
+export interface SubscriptionWithMember extends Subscription {
+  member?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    membershipStatus: string;
+  };
+}
+
+export interface SubscriptionStats {
+  totalSubscriptions: number;
+  activeSubscriptions: number;
+  expiringSoon: number;
+  totalRevenue: number;
+  statusDistribution: { [key: string]: number };
+  planDistribution: { [key: string]: number };
+}
+
 class SubscriptionService {
   // Get all membership plans
   async getMembershipPlans(): Promise<{ data: MembershipPlan[]; error: string | null }> {
@@ -255,6 +283,192 @@ class SubscriptionService {
     return start.toISOString().split('T')[0];
   }
 
+  // Get all subscriptions with member info (Admin view)
+  async getAllSubscriptions(filters?: SubscriptionFilters): Promise<{ data: SubscriptionWithMember[]; error: string | null }> {
+    try {
+      // First get subscriptions with basic filters
+      let query = supabase
+        .from('subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // Apply server-side filters
+      if (filters) {
+        if (filters.status && filters.status !== 'all') {
+          query = query.eq('status', filters.status);
+        }
+        if (filters.memberId) {
+          query = query.eq('member_id', filters.memberId);
+        }
+        if (filters.planId) {
+          query = query.eq('plan_id', filters.planId);
+        }
+        if (filters.startDate) {
+          query = query.gte('start_date', filters.startDate);
+        }
+        if (filters.endDate) {
+          query = query.lte('end_date', filters.endDate);
+        }
+      }
+
+      const { data: subscriptions, error } = await query;
+
+      if (error) {
+        console.error('Error fetching subscriptions:', error);
+        return { data: [], error: error.message };
+      }
+
+      if (!subscriptions || subscriptions.length === 0) {
+        return { data: [], error: null };
+      }
+
+      // Get unique member IDs and plan IDs
+      const memberIds = [...new Set(subscriptions.map(sub => sub.member_id))];
+      const planIds = [...new Set(subscriptions.map(sub => sub.plan_id))];
+
+      // Fetch members and plans separately
+      const [membersResult, plansResult] = await Promise.all([
+        supabase
+          .from('members')
+          .select('id, first_name, last_name, email, membership_status')
+          .in('id', memberIds),
+        supabase
+          .from('membership_plans')
+          .select('id, name, description, price, duration, features')
+          .in('id', planIds)
+      ]);
+
+      if (membersResult.error) {
+        console.error('Error fetching members:', membersResult.error);
+        return { data: [], error: 'Failed to fetch member data' };
+      }
+
+      if (plansResult.error) {
+        console.error('Error fetching plans:', plansResult.error);
+        return { data: [], error: 'Failed to fetch plan data' };
+      }
+
+      const membersMap = new Map(membersResult.data?.map(member => [member.id, member]) || []);
+      const plansMap = new Map(plansResult.data?.map(plan => [plan.id, plan]) || []);
+
+      // Transform subscriptions with member and plan data
+      let transformedSubscriptions: SubscriptionWithMember[] = subscriptions.map(sub => {
+        const member = membersMap.get(sub.member_id);
+        const plan = plansMap.get(sub.plan_id);
+
+        return {
+          id: sub.id,
+          memberId: sub.member_id,
+          planId: sub.plan_id,
+          status: sub.status,
+          startDate: sub.start_date,
+          endDate: sub.end_date,
+          autoRenew: sub.auto_renew,
+          price: sub.price,
+          createdAt: sub.created_at,
+          member: member ? {
+            id: member.id,
+            firstName: member.first_name,
+            lastName: member.last_name,
+            email: member.email,
+            membershipStatus: member.membership_status
+          } : undefined,
+          plan: plan ? {
+            id: plan.id,
+            name: plan.name,
+            description: plan.description || '',
+            price: plan.price,
+            duration: plan.duration,
+            features: plan.features || [],
+            isActive: true,
+            createdAt: plan.created_at || ''
+          } : undefined
+        };
+      });
+
+      // Apply search term filter (client-side)
+      if (filters?.searchTerm) {
+        const searchLower = filters.searchTerm.toLowerCase();
+        transformedSubscriptions = transformedSubscriptions.filter(sub => 
+          sub.member?.firstName.toLowerCase().includes(searchLower) ||
+          sub.member?.lastName.toLowerCase().includes(searchLower) ||
+          sub.member?.email.toLowerCase().includes(searchLower) ||
+          sub.plan?.name.toLowerCase().includes(searchLower)
+        );
+      }
+
+      return { data: transformedSubscriptions, error: null };
+    } catch (error) {
+      console.error('Unexpected error fetching all subscriptions:', error);
+      return { data: [], error: 'Failed to fetch subscriptions' };
+    }
+  }
+
+  // Get subscription statistics (Admin dashboard)
+  async getSubscriptionStats(): Promise<{ data: SubscriptionStats | null; error: string | null }> {
+    try {
+      // Get subscriptions and plans separately
+      const [subscriptionsResult, plansResult] = await Promise.all([
+        supabase.from('subscriptions').select('*'),
+        supabase.from('membership_plans').select('id, name')
+      ]);
+
+      if (subscriptionsResult.error) {
+        console.error('Error fetching subscription stats:', subscriptionsResult.error);
+        return { data: null, error: subscriptionsResult.error.message };
+      }
+
+      if (plansResult.error) {
+        console.error('Error fetching plans for stats:', plansResult.error);
+        return { data: null, error: plansResult.error.message };
+      }
+
+      const subscriptions = subscriptionsResult.data || [];
+      const plansMap = new Map(plansResult.data?.map(plan => [plan.id, plan.name]) || []);
+
+      const stats: SubscriptionStats = {
+        totalSubscriptions: subscriptions.length,
+        activeSubscriptions: 0,
+        expiringSoon: 0,
+        totalRevenue: 0,
+        statusDistribution: {},
+        planDistribution: {}
+      };
+
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+      subscriptions.forEach(sub => {
+        // Count active subscriptions
+        if (sub.status === 'active') {
+          stats.activeSubscriptions++;
+        }
+
+        // Count expiring soon (within 30 days)
+        if (sub.status === 'active' && new Date(sub.end_date) <= thirtyDaysFromNow) {
+          stats.expiringSoon++;
+        }
+
+        // Calculate total revenue from active subscriptions
+        if (sub.status === 'active') {
+          stats.totalRevenue += parseFloat(sub.price || '0');
+        }
+
+        // Status distribution
+        stats.statusDistribution[sub.status] = (stats.statusDistribution[sub.status] || 0) + 1;
+
+        // Plan distribution
+        const planName = plansMap.get(sub.plan_id) || 'Unknown Plan';
+        stats.planDistribution[planName] = (stats.planDistribution[planName] || 0) + 1;
+      });
+
+      return { data: stats, error: null };
+    } catch (error) {
+      console.error('Unexpected error fetching subscription stats:', error);
+      return { data: null, error: 'Failed to fetch subscription statistics' };
+    }
+  }
+
   // Transform database subscription data
   private transformSubscriptionData(dbSubscription: any): Subscription {
     return {
@@ -284,6 +498,7 @@ class SubscriptionService {
       createdAt: dbPlan.created_at
     };
   }
+
 }
 
 export const subscriptionService = new SubscriptionService();
