@@ -194,7 +194,7 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
             onClick={() => onNavigate('TODAY')}
             className="px-4 font-medium hover:bg-primary hover:text-primary-foreground"
           >
-            Today
+            This week
           </Button>
           <Button
             variant="ghost"
@@ -213,18 +213,20 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
           </span>
           
           {/* Year Selector with modern styling */}
-          <Select value={currentYear.toString()} onValueChange={handleYearChange}>
-            <SelectTrigger className="w-20 border-0 bg-muted/50 focus:ring-1 focus:ring-primary">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map(year => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="ml-3">
+            <Select value={currentYear.toString()} onValueChange={handleYearChange}>
+              <SelectTrigger className="w-24 border-0 bg-muted/50 focus:ring-1 focus:ring-primary">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map(year => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       

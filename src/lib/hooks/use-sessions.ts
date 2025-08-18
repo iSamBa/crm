@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   sessionService, 
   TrainingSession, 
@@ -14,7 +14,7 @@ export function useCalendarSessions(startDate: string, endDate: string, filters?
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -27,11 +27,11 @@ export function useCalendarSessions(startDate: string, endDate: string, filters?
     }
     
     setIsLoading(false);
-  };
+  }, [startDate, endDate, filters]);
 
   useEffect(() => {
     fetchSessions();
-  }, [startDate, endDate, filters?.memberId, filters?.trainerId, filters?.status, filters?.type]);
+  }, [fetchSessions]);
 
   return {
     sessions,
@@ -298,7 +298,7 @@ export function useCommentActions() {
 export function useConflictCheck() {
   const [isChecking, setIsChecking] = useState(false);
 
-  const checkConflicts = async (trainerId: string, scheduledDate: string, duration: number) => {
+  const checkConflicts = useCallback(async (trainerId: string, scheduledDate: string, duration: number) => {
     setIsChecking(true);
     
     const conflicts = await sessionService.checkConflicts(trainerId, scheduledDate, duration);
@@ -306,7 +306,7 @@ export function useConflictCheck() {
     setIsChecking(false);
     
     return conflicts;
-  };
+  }, []);
 
   return {
     checkConflicts,

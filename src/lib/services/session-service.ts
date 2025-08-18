@@ -384,23 +384,23 @@ class SessionService {
 
       // Check trainer availability
       const dayOfWeek = sessionStart.getDay();
-      const timeStr = sessionStart.toTimeString().slice(0, 5); // HH:MM
+      const sessionTime = sessionStart.toTimeString().slice(0, 8); // HH:MM:SS
+      const sessionEndTime = sessionEnd.toTimeString().slice(0, 8); // HH:MM:SS
 
       const { data: availability } = await supabase
         .from('trainer_availability')
         .select('*')
         .eq('trainer_id', trainerId)
-        .eq('day_of_week', dayOfWeek)
-        .eq('is_available', true);
+        .eq('day_of_week', dayOfWeek);
 
       const isAvailable = availability?.some(slot => 
-        timeStr >= slot.start_time && timeStr <= slot.end_time
+        sessionTime >= slot.start_time && sessionEndTime <= slot.end_time
       );
 
       if (!isAvailable) {
         conflicts.push({
           type: 'trainer_unavailable',
-          details: { trainerId, dayOfWeek, time: timeStr }
+          details: { trainerId, dayOfWeek, time: sessionTime, availability }
         });
       }
 

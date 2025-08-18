@@ -10,11 +10,12 @@ export interface TrainerFilters {
 class TrainerService {
   async getTrainers(filters?: TrainerFilters) {
     try {
+      // First try the proper trainer join query
       let query = supabase
         .from('trainers')
         .select(`
           *,
-          users!inner(*)
+          users(*)
         `)
         .order('users.first_name', { ascending: true });
 
@@ -32,13 +33,39 @@ class TrainerService {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching trainers:', error);
-        // If trainers table doesn't exist yet, return empty array instead of error
-        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
-          console.warn('Trainers table does not exist yet. Please run database setup.');
-          return { data: [], error: null };
+        console.error('Error fetching trainers with trainer table:', error);
+        
+        // Fallback: Get all users with role 'trainer' if trainers table query fails
+        console.log('Falling back to users table for trainers');
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('role', 'trainer')
+          .order('first_name', { ascending: true });
+
+        if (userError) {
+          console.error('Error fetching trainer users:', userError);
+          return { data: [], error: userError.message };
         }
-        return { data: [], error: error.message };
+
+        // Transform user data to trainer format
+        const trainers: Trainer[] = (userData || []).map((user: any) => ({
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          phone: user.phone,
+          avatar: user.avatar,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at,
+          specializations: ['General Training'], // Default specialization
+          certifications: [],
+          hourlyRate: 50, // Default rate
+          availability: {}
+        }));
+
+        return { data: trainers, error: null };
       }
 
       // Transform the data to match our Trainer interface
@@ -71,9 +98,9 @@ class TrainerService {
         .from('trainers')
         .select(`
           *,
-          users!inner(*)
+          users(*)
         `)
-        .eq('users.id', id)
+        .eq('id', id)
         .single();
 
       if (error) {

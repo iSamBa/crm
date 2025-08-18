@@ -195,7 +195,7 @@ export default function MemberDetailPage() {
                 {member.emergencyContact && (
                   <div>
                     <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                      <AlertTriangle className="h-4 w-4 text-primary" />
                       Emergency Contact
                     </h4>
                     <div className="text-sm space-y-1 pl-6">

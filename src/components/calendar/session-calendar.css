@@ -29,7 +29,7 @@
 .rbc-header {
   background: linear-gradient(to bottom, hsl(var(--muted)), hsl(var(--muted)/0.8));
   border-bottom: 1px solid hsl(var(--border));
-  border-left: 1px solid hsl(var(--border));
+  border-left: none;
   color: hsl(var(--foreground));
   font-weight: 600;
   font-size: 13px;
@@ -54,11 +54,11 @@
 }
 
 .rbc-timeslot-group {
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: none;
 }
 
 .rbc-time-slot {
-  border-top: 1px solid hsl(var(--border));
+  border-top: none;
   color: hsl(var(--muted-foreground));
   font-size: 12px;
   text-align: right;
@@ -77,12 +77,12 @@
 
 /* Increase event slot height by 10% */
 .rbc-timeslot-group {
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: none;
   min-height: 66px !important;
 }
 
 .rbc-day-slot .rbc-time-slot {
-  border-top: 1px solid hsl(var(--border));
+  border-top: none;
   background: hsl(var(--background));
   transition: background-color 0.15s ease;
   height: 33px !important;
@@ -97,7 +97,7 @@
 }
 
 .rbc-time-content {
-  border-left: 1px solid hsl(var(--border));
+  border-left: none;
   height: auto !important;
   max-height: calc(12 * 66px) !important; /* 12 hours * 66px per hour */
 }
@@ -111,11 +111,11 @@
 
 /* Calendar grid */
 .rbc-time-content {
-  border-left: 1px solid hsl(var(--border));
+  border-left: none;
 }
 
 .rbc-time-column {
-  border-left: 1px solid hsl(var(--border));
+  border-left: none;
   min-height: 48px;
   box-sizing: border-box;
 }
@@ -130,7 +130,7 @@
 }
 
 .rbc-day-slot .rbc-time-slot {
-  border-top: 1px solid hsl(var(--border));
+  border-top: none;
   background: hsl(var(--background));
   transition: background-color 0.15s ease;
 }
@@ -260,15 +260,47 @@
   box-shadow: 0 0 0 2px hsl(var(--primary));
 }
 
-/* Today highlighting */
+/* Today highlighting - Current day in week view header */
 .rbc-today {
-  background-color: hsl(var(--primary) / 0.05);
+  background-color: hsl(var(--primary) / 0.1) !important;
 }
 
+/* Main today header styling - day name and date */
 .rbc-header.rbc-today {
-  background-color: hsl(var(--primary) / 0.1);
-  color: hsl(var(--primary));
-  font-weight: 700;
+  background: hsl(var(--primary) / 0.15) !important;
+  color: hsl(var(--primary)) !important;
+  font-weight: 800 !important;
+  border-radius: 8px !important;
+  margin: 2px !important;
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.3) !important;
+  transform: scale(1.02) !important;
+  border: 2px solid hsl(var(--primary)) !important;
+}
+
+.rbc-header.rbc-today:hover {
+  background: hsl(var(--primary) / 0.2) !important;
+  color: hsl(var(--primary)) !important;
+  transform: scale(1.02) !important;
+}
+
+/* Specific targeting for week view headers */
+.rbc-time-header .rbc-header.rbc-today,
+.rbc-time-view .rbc-header.rbc-today {
+  background: hsl(var(--primary) / 0.15) !important;
+  color: hsl(var(--primary)) !important;
+  font-weight: 800 !important;
+  border-radius: 8px !important;
+  margin: 2px !important;
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.3) !important;
+  transform: scale(1.02) !important;
+  border: 2px solid hsl(var(--primary)) !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Ensure today column also has background */
+.rbc-today .rbc-time-slot {
+  background-color: hsl(var(--primary) / 0.03) !important;
 }
 
 /* Weekend styling */
@@ -390,7 +422,7 @@
 .rbc-date-cell {
   padding: 8px;
   text-align: center;
-  border-right: 1px solid hsl(var(--border));
+  border-right: none;
 }
 
 .rbc-button-link {
