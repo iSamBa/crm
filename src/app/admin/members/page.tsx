@@ -88,7 +88,7 @@ export default function MembersPage() {
 
     const result = await deleteMembers([memberId]);
     
-    if (result.success) {
+    if (result.data?.success) {
       refetch();
     } else {
       console.error('Error deleting member:', result.error);
@@ -146,7 +146,7 @@ export default function MembersPage() {
     
     const result = await deleteMembers(selectedMembers);
     
-    if (result.success) {
+    if (result.data?.success) {
       setSelectedMembers([]);
       refetch();
     } else {

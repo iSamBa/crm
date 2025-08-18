@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase/client';
+import { BaseService, ServiceResponse } from './base-service';
 import { Member } from '@/types';
 import { 
   arrayToCSV, 
@@ -8,35 +8,17 @@ import {
   formatObjectForCSV,
   CSVColumn 
 } from '@/lib/utils/csv-export';
+import { 
+  CreateMemberSchema, 
+  UpdateMemberSchema, 
+  MemberFiltersSchema,
+  type CreateMemberData,
+  type UpdateMemberData,
+  type MemberFilters
+} from '@/lib/schemas';
+import { queryKeys } from '@/lib/query-client';
 
-export interface CreateMemberData {
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phone?: string;
-  membershipStatus: 'active' | 'inactive' | 'frozen' | 'cancelled';
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-  medicalConditions?: string;
-  fitnessGoals?: string;
-  preferredTrainingTimes?: string[];
-  joinDate?: string;
-}
-
-export interface UpdateMemberData extends Partial<CreateMemberData> {
-  id: string;
-}
-
-export interface MemberFilters {
-  status?: string;
-  searchTerm?: string;
-  joinDateFrom?: string;
-  joinDateTo?: string;
-  hasEmergencyContact?: boolean;
-}
+// Types exported from schemas - no need to duplicate
 
 export interface MemberStats {
   totalMembers: number;
@@ -57,393 +39,390 @@ export interface MemberDistribution {
   color: string;
 }
 
-class MemberService {
-  // Create a new member
-  async createMember(data: CreateMemberData): Promise<{ data: Member | null; error: string | null }> {
-    try {
-      const memberData: any = {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        membership_status: data.membershipStatus,
-        join_date: data.joinDate || new Date().toISOString().split('T')[0],
-      };
+class MemberService extends BaseService {
+  private static readonly FIELD_MAP = {
+    first_name: 'firstName',
+    last_name: 'lastName',
+    membership_status: 'membershipStatus',
+    emergency_contact: 'emergencyContact',
+    medical_conditions: 'medicalConditions',
+    fitness_goals: 'fitnessGoals',
+    preferred_training_times: 'preferredTrainingTimes',
+    join_date: 'joinDate',
+    created_at: 'createdAt',
+    updated_at: 'updatedAt'
+  };
 
-      // Only add optional fields if they have values
-      if (data.email) memberData.email = data.email;
-      if (data.phone) memberData.phone = data.phone;
-      if (data.emergencyContact) memberData.emergency_contact = data.emergencyContact;
-      if (data.medicalConditions) memberData.medical_conditions = data.medicalConditions;
-      if (data.fitnessGoals) memberData.fitness_goals = data.fitnessGoals;
-      if (data.preferredTrainingTimes && data.preferredTrainingTimes.length > 0) {
-        memberData.preferred_training_times = data.preferredTrainingTimes;
+  // Create a new member with validation and cache invalidation
+  async createMember(data: CreateMemberData): Promise<ServiceResponse<Member>> {
+    // Validate input data
+    const validation = this.validateInput(CreateMemberSchema, data);
+    if (validation.error) return { data: null, error: validation.error };
+    
+    const validatedData = validation.data!;
+    const memberData = this.transformToDbFields({
+      ...validatedData,
+      joinDate: validatedData.joinDate || new Date().toISOString().split('T')[0],
+    }, MemberService.FIELD_MAP);
+
+    const result = await this.executeMutation(
+      async () => await this.db.from('members').insert(memberData).select().single(),
+      'Failed to create member',
+      {
+        logOperation: 'Creating member',
+        invalidateQueries: [
+          this.invalidate.members.all,
+          this.invalidate.members.lists,
+          this.invalidate.members.stats
+        ],
+        transform: (data) => this.transformMemberData(data)
       }
+    );
 
-      console.log('Creating member with data:', memberData);
-
-      const { data: member, error } = await supabase
-        .from('members')
-        .insert(memberData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating member:', error);
-        return { data: null, error: error.message };
-      }
-
-      return { data: this.transformMemberData(member), error: null };
-    } catch (error) {
-      console.error('Unexpected error creating member:', error);
-      return { data: null, error: 'Failed to create member' };
-    }
+    return {
+      data: result.data ? this.transformMemberData(result.data) : null,
+      error: result.error
+    };
   }
 
   // Get a member by ID
-  async getMemberById(id: string): Promise<{ data: Member | null; error: string | null }> {
-    try {
-      const { data: member, error } = await supabase
-        .from('members')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching member:', error);
-        return { data: null, error: error.message };
-      }
-
-      return { data: this.transformMemberData(member), error: null };
-    } catch (error) {
-      console.error('Unexpected error fetching member:', error);
-      return { data: null, error: 'Failed to fetch member' };
+  async getMemberById(id: string): Promise<ServiceResponse<Member>> {
+    if (!id) {
+      return { data: null, error: 'Member ID is required' };
     }
+
+    const result = await this.executeQuery(
+      async () => await this.db.from('members').select('*').eq('id', id).single(),
+      'Failed to fetch member',
+      {
+        logQuery: `Fetching member ${id}`,
+        transform: (data) => this.transformMemberData(data)
+      }
+    );
+
+    return {
+      data: result.data ? this.transformMemberData(result.data) : null,
+      error: result.error
+    };
   }
 
-  // Get all members with optional filtering
-  async getMembers(filters?: MemberFilters): Promise<{ data: Member[]; error: string | null }> {
-    try {
-      console.log('Fetching members with filters:', filters);
-      
-      let query = supabase.from('members').select('*');
+  // Get all members with optional filtering and validation
+  async getMembers(filters?: MemberFilters): Promise<ServiceResponse<Member[]>> {
+    // Validate filters if provided
+    if (filters) {
+      const validation = this.validateInput(MemberFiltersSchema, filters);
+      if (validation.error) return { data: [], error: validation.error };
+      filters = validation.data!;
+    }
 
-      // Apply filters
-      if (filters?.status && filters.status !== 'all') {
-        query = query.eq('membership_status', filters.status);
-      }
+    const result = await this.executeQuery(
+      async () => {
+        let query = this.db.from('members').select('*');
 
-      if (filters?.searchTerm && filters.searchTerm.trim()) {
-        const searchTerm = `%${filters.searchTerm.toLowerCase()}%`;
-        query = query.or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},email.ilike.${searchTerm},phone.ilike.${searchTerm}`);
-      }
-
-      if (filters?.joinDateFrom) {
-        query = query.gte('join_date', filters.joinDateFrom);
-      }
-
-      if (filters?.joinDateTo) {
-        query = query.lte('join_date', filters.joinDateTo);
-      }
-
-      if (filters?.hasEmergencyContact !== undefined) {
-        if (filters.hasEmergencyContact) {
-          query = query.not('emergency_contact', 'is', null);
-        } else {
-          query = query.is('emergency_contact', null);
+        // Apply filters
+        if (filters?.status && filters.status !== 'all') {
+          query = query.eq('membership_status', filters.status);
         }
+
+        if (filters?.searchTerm && filters.searchTerm.trim()) {
+          const searchTerm = `%${filters.searchTerm.toLowerCase()}%`;
+          query = query.or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},email.ilike.${searchTerm},phone.ilike.${searchTerm}`);
+        }
+
+        if (filters?.joinDateFrom) {
+          query = query.gte('join_date', filters.joinDateFrom);
+        }
+
+        if (filters?.joinDateTo) {
+          query = query.lte('join_date', filters.joinDateTo);
+        }
+
+        if (filters?.hasEmergencyContact !== undefined) {
+          if (filters.hasEmergencyContact) {
+            query = query.not('emergency_contact', 'is', null);
+          } else {
+            query = query.is('emergency_contact', null);
+          }
+        }
+
+        return query.order('created_at', { ascending: false });
+      },
+      'Failed to fetch members',
+      {
+        logQuery: `Fetching members with filters: ${JSON.stringify(filters)}`,
+        allowEmpty: true
       }
+    );
 
-      query = query.order('created_at', { ascending: false });
-
-      console.log('Executing Supabase query...');
-      const { data: members, error } = await query;
-
-      console.log('Query result:', { members, error });
-
-      if (error) {
-        console.error('Supabase error fetching members:', error);
-        return { data: [], error: error.message || 'Unknown database error' };
-      }
-
-      const transformedMembers = members?.map(member => this.transformMemberData(member)) || [];
-      console.log('Transformed members:', transformedMembers);
-      
-      return { data: transformedMembers, error: null };
-    } catch (error) {
-      console.error('Unexpected error fetching members:', error);
-      return { data: [], error: 'Failed to fetch members' };
-    }
+    return {
+      data: result.data ? (result.data || []).map((member: any) => this.transformMemberData(member)) : [],
+      error: result.error
+    };
   }
 
-  // Update a member
-  async updateMember(data: UpdateMemberData): Promise<{ data: Member | null; error: string | null }> {
-    try {
-      const updateData: any = {};
+  // Update a member with validation and cache invalidation
+  async updateMember(data: UpdateMemberData): Promise<ServiceResponse<Member>> {
+    // Validate input data
+    const validation = this.validateInput(UpdateMemberSchema, data);
+    if (validation.error) return { data: null, error: validation.error };
+    
+    const validatedData = validation.data!;
+    const { id, ...updateFields } = validatedData;
+    const updateData = this.transformToDbFields(updateFields, MemberService.FIELD_MAP);
 
-      if (data.firstName) updateData.first_name = data.firstName;
-      if (data.lastName) updateData.last_name = data.lastName;
-      if (data.email !== undefined) updateData.email = data.email || null;
-      if (data.phone !== undefined) updateData.phone = data.phone || null;
-      if (data.membershipStatus) updateData.membership_status = data.membershipStatus;
-      if (data.emergencyContact !== undefined) updateData.emergency_contact = data.emergencyContact;
-      if (data.medicalConditions !== undefined) updateData.medical_conditions = data.medicalConditions || null;
-      if (data.fitnessGoals !== undefined) updateData.fitness_goals = data.fitnessGoals || null;
-      if (data.preferredTrainingTimes !== undefined) updateData.preferred_training_times = data.preferredTrainingTimes;
-      if (data.joinDate) updateData.join_date = data.joinDate;
-
-      console.log('Updating member with data:', updateData);
-
-      const { data: member, error } = await supabase
-        .from('members')
-        .update(updateData)
-        .eq('id', data.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating member:', error);
-        return { data: null, error: error.message };
+    const result = await this.executeMutation(
+      async () => await this.db.from('members').update(updateData).eq('id', id).select().single(),
+      'Failed to update member',
+      {
+        logOperation: `Updating member ${id}`,
+        invalidateQueries: [
+          this.invalidate.members.all,
+          this.invalidate.members.lists,
+          () => this.invalidate.members.detail(id)
+        ],
+        optimisticUpdate: {
+          queryKey: queryKeys.members.detail(id),
+          updater: (oldData: Member) => ({ ...oldData, ...updateFields })
+        },
+        transform: (data) => this.transformMemberData(data)
       }
+    );
 
-      return { data: this.transformMemberData(member), error: null };
-    } catch (error) {
-      console.error('Unexpected error updating member:', error);
-      return { data: null, error: 'Failed to update member' };
-    }
+    return {
+      data: result.data ? this.transformMemberData(result.data) : null,
+      error: result.error
+    };
   }
 
-  // Delete a member
-  async deleteMember(id: string): Promise<{ success: boolean; error: string | null }> {
-    try {
-      const { error } = await supabase
-        .from('members')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error deleting member:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, error: null };
-    } catch (error) {
-      console.error('Unexpected error deleting member:', error);
-      return { success: false, error: 'Failed to delete member' };
+  // Delete a member with cache invalidation
+  async deleteMember(id: string): Promise<ServiceResponse<{ success: boolean }>> {
+    if (!id) {
+      return { data: null, error: 'Member ID is required' };
     }
+
+    const result = await this.executeMutation(
+      async () => await this.db.from('members').delete().eq('id', id),
+      'Failed to delete member',
+      {
+        logOperation: `Deleting member ${id}`,
+        invalidateQueries: [
+          this.invalidate.members.all,
+          this.invalidate.members.lists,
+          this.invalidate.members.stats,
+          () => this.invalidate.members.detail(id)
+        ]
+      }
+    );
+
+    return {
+      data: result.error ? null : { success: true },
+      error: result.error
+    };
   }
 
-  // Delete multiple members
-  async deleteMembers(ids: string[]): Promise<{ success: boolean; error: string | null }> {
-    try {
-      const { error } = await supabase
-        .from('members')
-        .delete()
-        .in('id', ids);
-
-      if (error) {
-        console.error('Error deleting members:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, error: null };
-    } catch (error) {
-      console.error('Unexpected error deleting members:', error);
-      return { success: false, error: 'Failed to delete members' };
+  // Delete multiple members with cache invalidation
+  async deleteMembers(ids: string[]): Promise<ServiceResponse<{ success: boolean }>> {
+    if (!ids || ids.length === 0) {
+      return { data: null, error: 'Member IDs are required' };
     }
+
+    const result = await this.executeMutation(
+      async () => await this.db.from('members').delete().in('id', ids),
+      'Failed to delete members',
+      {
+        logOperation: `Deleting ${ids.length} members`,
+        invalidateQueries: [
+          this.invalidate.members.all,
+          this.invalidate.members.lists,
+          this.invalidate.members.stats
+        ]
+      }
+    );
+
+    return {
+      data: result.error ? null : { success: true },
+      error: result.error
+    };
   }
 
-  // Get member statistics
-  async getMemberStats(): Promise<{ data: MemberStats | null; error: string | null }> {
-    try {
-      // Get total counts
-      const { count: totalMembers } = await supabase
-        .from('members')
-        .select('*', { count: 'exact', head: true });
+  // Get member statistics with caching
+  async getMemberStats(): Promise<ServiceResponse<MemberStats>> {
+    return this.executeQuery(
+      async () => {
+        // Parallel queries for better performance
+        const [
+          totalResult,
+          activeResult,
+          inactiveResult,
+          frozenResult,
+          cancelledResult,
+          monthResult,
+          weekResult
+        ] = await Promise.all([
+          this.db.from('members').select('*', { count: 'exact', head: true }),
+          this.db.from('members').select('*', { count: 'exact', head: true }).eq('membership_status', 'active'),
+          this.db.from('members').select('*', { count: 'exact', head: true }).eq('membership_status', 'inactive'),
+          this.db.from('members').select('*', { count: 'exact', head: true }).eq('membership_status', 'frozen'),
+          this.db.from('members').select('*', { count: 'exact', head: true }).eq('membership_status', 'cancelled'),
+          this.db.from('members').select('*', { count: 'exact', head: true })
+            .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
+          this.db.from('members').select('*', { count: 'exact', head: true })
+            .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        ]);
 
-      const { count: activeMembers } = await supabase
-        .from('members')
-        .select('*', { count: 'exact', head: true })
-        .eq('membership_status', 'active');
+        const stats: MemberStats = {
+          totalMembers: totalResult.count || 0,
+          activeMembers: activeResult.count || 0,
+          inactiveMembers: inactiveResult.count || 0,
+          frozenMembers: frozenResult.count || 0,
+          cancelledMembers: cancelledResult.count || 0,
+          newThisMonth: monthResult.count || 0,
+          newThisWeek: weekResult.count || 0,
+        };
 
-      const { count: inactiveMembers } = await supabase
-        .from('members')
-        .select('*', { count: 'exact', head: true })
-        .eq('membership_status', 'inactive');
-
-      const { count: frozenMembers } = await supabase
-        .from('members')
-        .select('*', { count: 'exact', head: true })
-        .eq('membership_status', 'frozen');
-
-      const { count: cancelledMembers } = await supabase
-        .from('members')
-        .select('*', { count: 'exact', head: true })
-        .eq('membership_status', 'cancelled');
-
-      // Get new members this month
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      const { count: newThisMonth } = await supabase
-        .from('members')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startOfMonth.toISOString());
-
-      // Get new members this week
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-      const { count: newThisWeek } = await supabase
-        .from('members')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startOfWeek.toISOString());
-
-      const stats: MemberStats = {
-        totalMembers: totalMembers || 0,
-        activeMembers: activeMembers || 0,
-        inactiveMembers: inactiveMembers || 0,
-        frozenMembers: frozenMembers || 0,
-        cancelledMembers: cancelledMembers || 0,
-        newThisMonth: newThisMonth || 0,
-        newThisWeek: newThisWeek || 0,
-      };
-
-      return { data: stats, error: null };
-    } catch (error) {
-      console.error('Unexpected error fetching member stats:', error);
-      return { data: null, error: 'Failed to fetch member statistics' };
-    }
+        return { data: stats, error: null };
+      },
+      'Failed to fetch member statistics',
+      {
+        logQuery: 'Fetching member statistics',
+        allowEmpty: true
+      }
+    );
   }
 
   // Get member distribution for charts
-  async getMemberDistribution(): Promise<{ data: MemberDistribution[] | null; error: string | null }> {
-    try {
-      const { data: stats, error: statsError } = await this.getMemberStats();
-      
-      if (statsError || !stats) {
-        return { data: null, error: statsError || 'Failed to fetch stats' };
-      }
-
-      const total = stats.totalMembers;
-      if (total === 0) {
-        return { data: [], error: null };
-      }
-
-      // Define colors that match the dashboard theme
-      const statusColors = {
-        active: '#cb8589', // Dusty rose
-        frozen: '#d7b29d', // Warm beige
-        inactive: '#e8d2ae', // Light cream  
-        cancelled: '#DDE8B9', // Soft green
-      };
-
-      const distribution: MemberDistribution[] = [
-        {
-          status: 'Active',
-          count: stats.activeMembers,
-          percentage: Math.round((stats.activeMembers / total) * 100),
-          color: statusColors.active,
-        },
-        {
-          status: 'Frozen',
-          count: stats.frozenMembers,
-          percentage: Math.round((stats.frozenMembers / total) * 100),
-          color: statusColors.frozen,
-        },
-        {
-          status: 'Inactive',
-          count: stats.inactiveMembers,
-          percentage: Math.round((stats.inactiveMembers / total) * 100),
-          color: statusColors.inactive,
-        },
-        {
-          status: 'Cancelled',
-          count: stats.cancelledMembers,
-          percentage: Math.round((stats.cancelledMembers / total) * 100),
-          color: statusColors.cancelled,
-        },
-      ].filter(item => item.count > 0); // Only include statuses with members
-
-      return { data: distribution, error: null };
-    } catch (error) {
-      console.error('Unexpected error fetching member distribution:', error);
-      return { data: null, error: 'Failed to fetch member distribution' };
+  async getMemberDistribution(): Promise<ServiceResponse<MemberDistribution[]>> {
+    const statsResult = await this.getMemberStats();
+    
+    if (statsResult.error || !statsResult.data) {
+      return { data: null, error: statsResult.error || 'Failed to fetch stats' };
     }
+
+    const stats = statsResult.data;
+    const total = stats.totalMembers;
+    
+    if (total === 0) {
+      return { data: [], error: null };
+    }
+
+    // Define colors that match the dashboard theme
+    const statusColors = {
+      active: '#cb8589', // Dusty rose
+      frozen: '#d7b29d', // Warm beige
+      inactive: '#e8d2ae', // Light cream  
+      cancelled: '#DDE8B9', // Soft green
+    };
+
+    const distribution: MemberDistribution[] = [
+      {
+        status: 'Active',
+        count: stats.activeMembers,
+        percentage: Math.round((stats.activeMembers / total) * 100),
+        color: statusColors.active,
+      },
+      {
+        status: 'Frozen',
+        count: stats.frozenMembers,
+        percentage: Math.round((stats.frozenMembers / total) * 100),
+        color: statusColors.frozen,
+      },
+      {
+        status: 'Inactive',
+        count: stats.inactiveMembers,
+        percentage: Math.round((stats.inactiveMembers / total) * 100),
+        color: statusColors.inactive,
+      },
+      {
+        status: 'Cancelled',
+        count: stats.cancelledMembers,
+        percentage: Math.round((stats.cancelledMembers / total) * 100),
+        color: statusColors.cancelled,
+      },
+    ].filter(item => item.count > 0); // Only include statuses with members
+
+    return { data: distribution, error: null };
   }
 
   // Search members by name, email, or phone
-  async searchMembers(searchTerm: string): Promise<{ data: Member[]; error: string | null }> {
+  async searchMembers(searchTerm: string): Promise<ServiceResponse<Member[]>> {
     return this.getMembers({ searchTerm });
   }
 
-  // Get recent member activities
-  async getRecentMemberActivities(limit = 10): Promise<{ data: any[]; error: string | null }> {
-    try {
-      const { data: members, error } = await supabase
-        .from('members')
-        .select('first_name, last_name, created_at, membership_status')
-        .order('created_at', { ascending: false })
-        .limit(limit);
+  // Get recent member activities with caching
+  async getRecentMemberActivities(limit = 10): Promise<ServiceResponse<any[]>> {
+    return this.executeQuery(
+      async () => {
+        const result = await this.db
+          .from('members')
+          .select('first_name, last_name, created_at, membership_status')
+          .order('created_at', { ascending: false })
+          .limit(limit);
 
-      if (error) {
-        console.error('Error fetching recent activities:', error);
-        return { data: [], error: error.message };
+        const activities = (result.data || []).map(member => ({
+          type: 'member_joined',
+          title: 'New member registration',
+          description: `${member.first_name} ${member.last_name} joined`,
+          time: new Date(member.created_at).toLocaleString(),
+          memberName: `${member.first_name} ${member.last_name}`,
+          status: member.membership_status,
+          timestamp: member.created_at,
+        }));
+
+        return { data: activities, error: result.error };
+      },
+      'Failed to fetch recent activities',
+      {
+        logQuery: `Fetching ${limit} recent activities`,
+        allowEmpty: true
       }
-
-      const activities = (members || []).map(member => ({
-        type: 'member_joined',
-        title: 'New member registration',
-        description: `${member.first_name} ${member.last_name} joined`,
-        time: new Date(member.created_at).toLocaleString(),
-        memberName: `${member.first_name} ${member.last_name}`,
-        status: member.membership_status,
-        timestamp: member.created_at,
-      }));
-
-      return { data: activities, error: null };
-    } catch (error) {
-      console.error('Unexpected error fetching recent activities:', error);
-      return { data: [], error: 'Failed to fetch recent activities' };
-    }
+    );
   }
 
-  // Freeze a member's membership
-  async freezeMembership(id: string): Promise<{ success: boolean; error: string | null }> {
+  // Membership status update methods with validation and cache invalidation
+  async freezeMembership(id: string): Promise<ServiceResponse<{ success: boolean }>> {
     return this.updateMemberStatus(id, 'frozen');
   }
 
-  // Unfreeze a member's membership
-  async unfreezeMembership(id: string): Promise<{ success: boolean; error: string | null }> {
+  async unfreezeMembership(id: string): Promise<ServiceResponse<{ success: boolean }>> {
     return this.updateMemberStatus(id, 'active');
   }
 
-  // Cancel a member's membership
-  async cancelMembership(id: string): Promise<{ success: boolean; error: string | null }> {
+  async cancelMembership(id: string): Promise<ServiceResponse<{ success: boolean }>> {
     return this.updateMemberStatus(id, 'cancelled');
   }
 
-  // Reactivate a member's membership
-  async reactivateMembership(id: string): Promise<{ success: boolean; error: string | null }> {
+  async reactivateMembership(id: string): Promise<ServiceResponse<{ success: boolean }>> {
     return this.updateMemberStatus(id, 'active');
   }
 
-  // Update member status
-  private async updateMemberStatus(id: string, status: 'active' | 'inactive' | 'frozen' | 'cancelled'): Promise<{ success: boolean; error: string | null }> {
-    try {
-      const { error } = await supabase
-        .from('members')
-        .update({ 
-          membership_status: status
-        })
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error updating member status:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, error: null };
-    } catch (error) {
-      console.error('Unexpected error updating member status:', error);
-      return { success: false, error: 'Failed to update member status' };
+  // Update member status with optimistic updates
+  private async updateMemberStatus(id: string, status: 'active' | 'inactive' | 'frozen' | 'cancelled'): Promise<ServiceResponse<{ success: boolean }>> {
+    if (!id) {
+      return { data: null, error: 'Member ID is required' };
     }
+
+    const result = await this.executeMutation(
+      async () => await this.db.from('members').update({ membership_status: status }).eq('id', id),
+      'Failed to update member status',
+      {
+        logOperation: `Updating member ${id} status to ${status}`,
+        invalidateQueries: [
+          this.invalidate.members.all,
+          this.invalidate.members.lists,
+          this.invalidate.members.stats,
+          () => this.invalidate.members.detail(id)
+        ],
+        optimisticUpdate: {
+          queryKey: queryKeys.members.detail(id),
+          updater: (oldData: Member) => ({ ...oldData, membershipStatus: status })
+        }
+      }
+    );
+
+    return {
+      data: result.error ? null : { success: true },
+      error: result.error
+    };
   }
 
   // Transform database member data to frontend Member type
@@ -456,12 +435,12 @@ class MemberService {
       id: dbMember.id || '',
       firstName: dbMember.first_name || '',
       lastName: dbMember.last_name || '',
-      email: dbMember.email || undefined,
-      phone: dbMember.phone || undefined,
+      email: dbMember.email || null,
+      phone: dbMember.phone || null,
       membershipStatus: dbMember.membership_status || 'active',
-      emergencyContact: dbMember.emergency_contact || undefined,
-      medicalConditions: dbMember.medical_conditions || undefined,
-      fitnessGoals: dbMember.fitness_goals || undefined,
+      emergencyContact: dbMember.emergency_contact || null,
+      medicalConditions: dbMember.medical_conditions || null,
+      fitnessGoals: dbMember.fitness_goals || null,
       preferredTrainingTimes: dbMember.preferred_training_times || [],
       joinDate: dbMember.join_date || new Date().toISOString().split('T')[0],
       createdAt: dbMember.created_at || new Date().toISOString(),
@@ -510,7 +489,7 @@ class MemberService {
 
       return { success: true };
     } catch (error) {
-      console.error('Error exporting members to CSV:', error);
+      console.error('Unexpected error exporting members:', error);
       return { success: false, error: 'Failed to export members' };
     }
   }

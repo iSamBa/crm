@@ -42,7 +42,8 @@ import {
 import { useSessionActions, useConflictCheck } from '@/lib/hooks/use-sessions';
 import { useMembers } from '@/lib/hooks/use-members';
 import { useTrainers } from '@/lib/hooks/use-trainers';
-import { TrainingSession, CreateSessionData } from '@/lib/services/session-service';
+import { TrainingSession } from '@/types';
+import { CreateSessionData } from '@/lib/services/session-service';
 
 const sessionSchema = z.object({
   memberId: z.string().min(1, 'Please select a member'),

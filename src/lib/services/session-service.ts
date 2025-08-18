@@ -1,75 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
-
-// Enhanced TrainingSession interface to match our database schema
-export interface TrainingSession {
-  id: string;
-  memberId: string;
-  trainerId: string;
-  type: 'personal' | 'group' | 'class' | 'assessment' | 'consultation' | 'rehabilitation';
-  title: string;
-  description?: string;
-  scheduledDate: string; // ISO string
-  duration: number; // in minutes
-  status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled';
-  notes?: string;
-  cost?: number;
-  
-  // Enhanced fields
-  sessionRoom?: string;
-  equipmentNeeded?: string[];
-  sessionGoals?: string;
-  actualStartTime?: string;
-  actualEndTime?: string;
-  recurringPattern?: RecurringPattern;
-  createdBy?: string;
-  preparationNotes?: string;
-  completionSummary?: string;
-  memberRating?: number; // 1-5
-  trainerRating?: number; // 1-5
-  
-  createdAt: string;
-  
-  // Related data (populated when needed)
-  member?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email?: string;
-  };
-  trainer?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email?: string;
-  };
-  comments?: SessionComment[];
-}
-
-export interface RecurringPattern {
-  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
-  interval: number; // every X weeks/months
-  daysOfWeek?: number[]; // for weekly patterns
-  endDate?: string;
-  occurrences?: number;
-}
-
-export interface SessionComment {
-  id: string;
-  sessionId: string;
-  userId: string;
-  comment: string;
-  commentType: 'note' | 'progress' | 'issue' | 'goal' | 'equipment' | 'feedback' | 'reminder';
-  isPrivate: boolean;
-  createdAt: string;
-  updatedAt: string;
-  
-  // Populated user info
-  user?: {
-    firstName: string;
-    lastName: string;
-    role: string;
-  };
-}
+import { TrainingSession, SessionComment, RecurringPattern } from '@/types';
 
 export interface CreateSessionData {
   memberId: string;
@@ -108,27 +38,6 @@ export interface SessionFilters {
   sessionRoom?: string;
 }
 
-export interface TrainerAvailability {
-  id: string;
-  trainerId: string;
-  dayOfWeek: number; // 0-6 (Sunday-Saturday)
-  startTime: string; // HH:MM format
-  endTime: string;
-  isAvailable: boolean;
-  effectiveDate: string;
-  endDate?: string;
-}
-
-export interface SessionConflict {
-  id: string;
-  sessionId: string;
-  conflictType: 'trainer_unavailable' | 'member_booked' | 'room_occupied' | 'equipment_unavailable';
-  conflictDetails: any;
-  resolved: boolean;
-  resolvedAt?: string;
-  resolvedBy?: string;
-  createdAt: string;
-}
 
 class SessionService {
   // Calendar and session retrieval methods
@@ -138,6 +47,8 @@ class SessionService {
     filters?: SessionFilters
   ): Promise<{ data: TrainingSession[]; error: string | null }> {
     try {
+      console.log('[SessionService] Fetching sessions by date range:', { startDate, endDate, filters });
+      
       let query = supabase
         .from('training_sessions')
         .select(`
@@ -162,6 +73,8 @@ class SessionService {
 
       const { data: sessions, error } = await query;
 
+      console.log('[SessionService] Query result:', { sessions, error });
+
       if (error) {
         console.error('Error fetching sessions by date range:', error);
         // If training_sessions table columns don't exist yet, return empty array
@@ -173,6 +86,8 @@ class SessionService {
       }
 
       const transformedSessions = (sessions || []).map(session => this.transformSessionData(session));
+      console.log('[SessionService] Transformed sessions:', transformedSessions);
+      
       return { data: transformedSessions, error: null };
     } catch (error) {
       console.error('Unexpected error fetching sessions by date range:', error);

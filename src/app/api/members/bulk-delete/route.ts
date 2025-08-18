@@ -12,11 +12,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { success, error } = await memberService.deleteMembers(ids);
+    const { data, error } = await memberService.deleteMembers(ids);
 
-    if (!success) {
+    if (error || !data?.success) {
       return NextResponse.json(
-        { error, message: 'Failed to delete members' },
+        { error: error || 'Failed to delete members', message: 'Failed to delete members' },
         { status: 400 }
       );
     }

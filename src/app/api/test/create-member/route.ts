@@ -44,8 +44,8 @@ export async function POST() {
 
     // Clean up - delete the test member
     if (member?.id) {
-      const { success: deleteSuccess } = await memberService.deleteMember(member.id);
-      console.log('Test member cleanup:', deleteSuccess ? 'successful' : 'failed');
+      const { data: deleteResult } = await memberService.deleteMember(member.id);
+      console.log('Test member cleanup:', deleteResult?.success ? 'successful' : 'failed');
     }
 
     return NextResponse.json({

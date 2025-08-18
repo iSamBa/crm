@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { memberService, MemberFilters, MemberStats } from '@/lib/services/member-service';
+import { memberService, type MemberStats } from '@/lib/services/member-service';
+import { type MemberFilters, type CreateMemberData, type UpdateMemberData } from '@/lib/schemas';
 import { Member } from '@/types';
 
 // Hook for managing member list
@@ -17,7 +18,7 @@ export function useMembers(filters?: MemberFilters) {
     if (fetchError) {
       setError(fetchError);
     } else {
-      setMembers(data);
+      setMembers(data || []);
     }
     
     setIsLoading(false);
@@ -27,15 +28,11 @@ export function useMembers(filters?: MemberFilters) {
     fetchMembers();
   }, [filters?.status, filters?.searchTerm, filters?.joinDateFrom, filters?.joinDateTo]);
 
-  const refetch = () => {
-    fetchMembers();
-  };
-
   return {
     members,
     isLoading,
     error,
-    refetch,
+    refetch: fetchMembers,
   };
 }
 
@@ -50,7 +47,7 @@ export function useMember(id: string | null) {
       setIsLoading(false);
       return;
     }
-
+    
     setIsLoading(true);
     setError(null);
     
@@ -69,15 +66,11 @@ export function useMember(id: string | null) {
     fetchMember();
   }, [id]);
 
-  const refetch = () => {
-    fetchMember();
-  };
-
   return {
     member,
     isLoading,
     error,
-    refetch,
+    refetch: fetchMember,
   };
 }
 
@@ -106,15 +99,11 @@ export function useMemberStats() {
     fetchStats();
   }, []);
 
-  const refetch = () => {
-    fetchStats();
-  };
-
   return {
     stats,
     isLoading,
     error,
-    refetch,
+    refetch: fetchStats,
   };
 }
 
@@ -123,115 +112,75 @@ export function useMemberActions() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createMember = async (data: any) => {
+  const createMember = async (data: CreateMemberData) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await memberService.createMember(data);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
-  const updateMember = async (data: any) => {
+  const updateMember = async (data: UpdateMemberData) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await memberService.updateMember(data);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
   const deleteMember = async (id: string) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await memberService.deleteMember(id);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
   const deleteMembers = async (ids: string[]) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await memberService.deleteMembers(ids);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
   const freezeMembership = async (id: string) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await memberService.freezeMembership(id);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
   const unfreezeMembership = async (id: string) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await memberService.unfreezeMembership(id);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
   const cancelMembership = async (id: string) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await memberService.cancelMembership(id);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
   const reactivateMembership = async (id: string) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await memberService.reactivateMembership(id);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
@@ -264,7 +213,7 @@ export function useRecentMemberActivities(limit = 10) {
     if (fetchError) {
       setError(fetchError);
     } else {
-      setActivities(data);
+      setActivities(data || []);
     }
     
     setIsLoading(false);
@@ -274,14 +223,10 @@ export function useRecentMemberActivities(limit = 10) {
     fetchActivities();
   }, [limit]);
 
-  const refetch = () => {
-    fetchActivities();
-  };
-
   return {
     activities,
     isLoading,
     error,
-    refetch,
+    refetch: fetchActivities,
   };
 }

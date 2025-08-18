@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
+import { TrainingSession, SessionComment } from '@/types';
 import { 
   sessionService, 
-  TrainingSession, 
-  SessionComment, 
   CreateSessionData, 
   UpdateSessionData, 
   SessionFilters 
@@ -14,7 +13,12 @@ export function useCalendarSessions(startDate: string, endDate: string, filters?
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSessions = useCallback(async () => {
+  const fetchSessions = async () => {
+    if (!startDate || !endDate) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     
@@ -23,15 +27,15 @@ export function useCalendarSessions(startDate: string, endDate: string, filters?
     if (fetchError) {
       setError(fetchError);
     } else {
-      setSessions(data);
+      setSessions(data || []);
     }
     
     setIsLoading(false);
-  }, [startDate, endDate, filters]);
+  };
 
   useEffect(() => {
     fetchSessions();
-  }, [fetchSessions]);
+  }, [startDate, endDate, filters?.memberId, filters?.trainerId, filters?.status, filters?.type, filters?.sessionRoom]);
 
   return {
     sessions,
@@ -61,7 +65,7 @@ export function useMemberSessions(memberId: string, filters?: Omit<SessionFilter
     if (fetchError) {
       setError(fetchError);
     } else {
-      setSessions(data);
+      setSessions(data || []);
     }
     
     setIsLoading(false);
@@ -99,7 +103,7 @@ export function useTrainerSessions(trainerId: string, filters?: Omit<SessionFilt
     if (fetchError) {
       setError(fetchError);
     } else {
-      setSessions(data);
+      setSessions(data || []);
     }
     
     setIsLoading(false);
@@ -125,42 +129,27 @@ export function useSessionActions() {
   const createSession = async (data: CreateSessionData) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await sessionService.createSession(data);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
   const updateSession = async (data: UpdateSessionData) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await sessionService.updateSession(data);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
   const deleteSession = async (id: string) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await sessionService.deleteSession(id);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
@@ -245,7 +234,7 @@ export function useSessionComments(sessionId: string) {
     if (fetchError) {
       setError(fetchError);
     } else {
-      setComments(data);
+      setComments(data || []);
     }
     
     setIsLoading(false);
@@ -268,22 +257,12 @@ export function useCommentActions() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const addComment = async (
-    sessionId: string, 
-    comment: string, 
-    commentType: SessionComment['commentType'],
-    isPrivate = false
-  ) => {
+  const addComment = async (sessionId: string, comment: string, commentType: SessionComment['commentType'], isPrivate = false) => {
     setIsLoading(true);
     setError(null);
-    
     const result = await sessionService.addSessionComment(sessionId, comment, commentType, isPrivate);
-    
     setIsLoading(false);
-    if (result.error) {
-      setError(result.error);
-    }
-    
+    if (result.error) setError(result.error);
     return result;
   };
 
@@ -371,8 +350,7 @@ export function useSessionStats(filters?: SessionFilters) {
         averageRating
       });
     } catch (error) {
-      console.error('Error fetching session stats:', error);
-      setError('Failed to fetch session statistics');
+      setError(error instanceof Error ? error.message : 'Failed to fetch session statistics');
     }
     
     setIsLoading(false);

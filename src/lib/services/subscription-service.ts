@@ -381,7 +381,7 @@ class SubscriptionService {
             duration: plan.duration,
             features: plan.features || [],
             isActive: true,
-            createdAt: plan.created_at || ''
+            createdAt: new Date().toISOString()
           } : undefined
         };
       });

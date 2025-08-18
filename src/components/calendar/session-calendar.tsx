@@ -21,7 +21,7 @@ import {
   Calendar as CalendarIcon
 } from 'lucide-react';
 import { useCalendarSessions } from '@/lib/hooks/use-sessions';
-import { TrainingSession } from '@/lib/services/session-service';
+import { TrainingSession } from '@/types';
 import { SessionModal } from './session-modal';
 import { SessionDetailModal } from './session-detail-modal';
 import 'react-big-calendar/lib/css/react-big-calendar.css';

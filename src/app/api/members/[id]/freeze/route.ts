@@ -6,11 +6,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { success, error } = await memberService.freezeMembership(params.id);
+    const { data, error } = await memberService.freezeMembership(params.id);
 
-    if (!success) {
+    if (error || !data?.success) {
       return NextResponse.json(
-        { error, message: 'Failed to freeze membership' },
+        { error: error || 'Failed to freeze membership', message: 'Failed to freeze membership' },
         { status: 400 }
       );
     }
@@ -33,11 +33,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { success, error } = await memberService.unfreezeMembership(params.id);
+    const { data, error } = await memberService.unfreezeMembership(params.id);
 
-    if (!success) {
+    if (error || !data?.success) {
       return NextResponse.json(
-        { error, message: 'Failed to unfreeze membership' },
+        { error: error || 'Failed to unfreeze membership', message: 'Failed to unfreeze membership' },
         { status: 400 }
       );
     }

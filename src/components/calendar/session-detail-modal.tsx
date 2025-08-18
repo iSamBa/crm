@@ -41,7 +41,7 @@ import {
   useSessionComments, 
   useCommentActions 
 } from '@/lib/hooks/use-sessions';
-import { TrainingSession } from '@/lib/services/session-service';
+import { TrainingSession } from '@/types';
 import { SessionModal } from './session-modal';
 
 interface SessionDetailModalProps {

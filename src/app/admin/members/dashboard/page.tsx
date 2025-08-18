@@ -13,11 +13,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { useMemberStats, useRecentMemberActivities } from '@/lib/hooks/use-members';
+import { useMemberStats, useRecentMemberActivities } from '@/lib/hooks/use-members-modern';
 
 export default function MemberDashboard() {
-  const { stats, isLoading: statsLoading } = useMemberStats();
-  const { activities: recentActivities, isLoading: activitiesLoading } = useRecentMemberActivities(5);
+  const { data: stats, isLoading: statsLoading } = useMemberStats();
+  const { data: recentActivities, isLoading: activitiesLoading } = useRecentMemberActivities(5);
   
   const isLoading = statsLoading || activitiesLoading;
 
@@ -100,7 +100,7 @@ export default function MemberDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.length === 0 ? (
+              {!recentActivities || recentActivities.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No recent activities
                 </p>

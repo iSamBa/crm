@@ -57,11 +57,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { success, error } = await memberService.deleteMember(params.id);
+    const { data, error } = await memberService.deleteMember(params.id);
 
-    if (!success) {
+    if (error || !data?.success) {
       return NextResponse.json(
-        { error, message: 'Failed to delete member' },
+        { error: error || 'Failed to delete member', message: 'Failed to delete member' },
         { status: 400 }
       );
     }

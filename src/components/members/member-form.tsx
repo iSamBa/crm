@@ -91,7 +91,7 @@ export function MemberForm({ member, onSuccess }: MemberFormProps) {
         fitnessGoals: data.fitnessGoals || undefined,
         preferredTrainingTimes: data.preferredTrainingTimes
           ? data.preferredTrainingTimes.split(',').map((time) => time.trim())
-          : undefined,
+          : [],
       };
 
       let result;

@@ -73,6 +73,14 @@ export interface Payment {
   description?: string;
 }
 
+export interface RecurringPattern {
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+  interval: number;
+  daysOfWeek?: number[];
+  endDate?: string;
+  occurrences?: number;
+}
+
 export interface TrainingSession {
   id: string;
   memberId: string;
@@ -92,19 +100,46 @@ export interface TrainingSession {
   sessionGoals?: string;
   actualStartTime?: string;
   actualEndTime?: string;
-  recurringPattern?: {
-    frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
-    interval: number;
-    daysOfWeek?: number[];
-    endDate?: string;
-    occurrences?: number;
-  };
+  recurringPattern?: RecurringPattern;
   createdBy?: string;
   preparationNotes?: string;
   completionSummary?: string;
   memberRating?: number; // 1-5
   trainerRating?: number; // 1-5
   createdAt: string;
+  
+  // Related data (populated when needed)
+  member?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+  };
+  trainer?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+  };
+  comments?: SessionComment[];
+}
+
+export interface SessionComment {
+  id: string;
+  sessionId: string;
+  userId: string;
+  comment: string;
+  commentType: 'note' | 'progress' | 'issue' | 'goal' | 'equipment' | 'feedback' | 'reminder';
+  isPrivate: boolean;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Populated user info
+  user?: {
+    firstName: string;
+    lastName: string;
+    role: string;
+  };
 }
 
 export interface BodyMeasurement {
@@ -132,4 +167,26 @@ export interface Attendance {
   checkOutTime?: string;
   duration?: number;
   sessionType?: 'gym' | 'class' | 'personal_training';
+}
+
+export interface TrainerAvailability {
+  id: string;
+  trainerId: string;
+  dayOfWeek: number; // 0-6 (Sunday-Saturday)
+  startTime: string; // HH:MM format
+  endTime: string;
+  isAvailable: boolean;
+  effectiveDate: string;
+  endDate?: string;
+}
+
+export interface SessionConflict {
+  id: string;
+  sessionId: string;
+  conflictType: 'trainer_unavailable' | 'member_booked' | 'room_occupied' | 'equipment_unavailable';
+  conflictDetails: any;
+  resolved: boolean;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  createdAt: string;
 }

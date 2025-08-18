@@ -26,15 +26,21 @@ export const PAYMENT_STATUS = {
 
 export const SESSION_STATUS = {
   SCHEDULED: 'scheduled',
+  CONFIRMED: 'confirmed',
+  IN_PROGRESS: 'in_progress',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
   NO_SHOW: 'no_show',
+  RESCHEDULED: 'rescheduled',
 } as const;
 
 export const SESSION_TYPES = {
   PERSONAL: 'personal',
   GROUP: 'group',
   CLASS: 'class',
+  ASSESSMENT: 'assessment',
+  CONSULTATION: 'consultation',
+  REHABILITATION: 'rehabilitation',
 } as const;
 
 export const PAYMENT_METHODS = {
@@ -55,6 +61,30 @@ export const DURATION_TYPES = {
   ANNUAL: 'annual',
 } as const;
 
+export const COMMENT_TYPES = {
+  NOTE: 'note',
+  PROGRESS: 'progress',
+  ISSUE: 'issue',
+  GOAL: 'goal',
+  EQUIPMENT: 'equipment',
+  FEEDBACK: 'feedback',
+  REMINDER: 'reminder',
+} as const;
+
+export const RECURRING_FREQUENCY = {
+  DAILY: 'daily',
+  WEEKLY: 'weekly',
+  BIWEEKLY: 'biweekly',
+  MONTHLY: 'monthly',
+} as const;
+
+export const CONFLICT_TYPES = {
+  TRAINER_UNAVAILABLE: 'trainer_unavailable',
+  MEMBER_BOOKED: 'member_booked',
+  ROOM_OCCUPIED: 'room_occupied',
+  EQUIPMENT_UNAVAILABLE: 'equipment_unavailable',
+} as const;
+
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/auth/login',
@@ -65,6 +95,7 @@ export const ROUTES = {
     PAYMENTS: '/admin/payments',
     TRAINERS: '/admin/trainers',
     REPORTS: '/admin/reports',
+    CALENDAR: '/admin/calendar',
   },
   TRAINER: {
     DASHBOARD: '/trainer/dashboard',
