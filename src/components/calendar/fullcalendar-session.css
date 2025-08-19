@@ -133,8 +133,10 @@
   background-color: hsl(var(--primary) / 0.03) !important;
 }
 
-/* Event styling */
-.fc-event {
+/* Event styling - consistent across all views */
+.fc-event,
+.fc-timegrid-event,
+.fc-daygrid-event {
   border: none !important;
   border-radius: 6px !important;
   box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06) !important;
@@ -142,6 +144,16 @@
   cursor: pointer !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   overflow: hidden !important;
+  background-color: var(--fc-event-bg-color) !important;
+  border-color: var(--fc-event-border-color) !important;
+  color: white !important;
+}
+
+/* Ensure all text within events is white */
+.fc-event *,
+.fc-timegrid-event *,
+.fc-daygrid-event * {
+  color: white !important;
 }
 
 .fc-event:hover {
@@ -165,13 +177,25 @@
 }
 
 .fc-event-title {
-  font-weight: 600;
-  font-size: 11px;
+  font-weight: 700;
+  font-size: 13px;
   line-height: 1.2;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc-event-time {
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.1;
+  opacity: 0.85;
   margin-bottom: 1px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.01em;
 }
 
 .fc-event-member,
@@ -184,35 +208,59 @@
   text-overflow: ellipsis;
 }
 
-/* Session type specific colors */
-.session-personal {
+/* Session type specific colors - consistent across all views */
+.fc-event.session-personal,
+.fc-timegrid-event.session-personal,
+.fc-daygrid-event.session-personal {
   --fc-event-bg-color: #059669 !important;
   --fc-event-border-color: #059669 !important;
+  background-color: #059669 !important;
+  border-color: #059669 !important;
 }
 
-.session-group {
+.fc-event.session-group,
+.fc-timegrid-event.session-group,
+.fc-daygrid-event.session-group {
   --fc-event-bg-color: #dc2626 !important;
   --fc-event-border-color: #dc2626 !important;
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
 }
 
-.session-class {
+.fc-event.session-class,
+.fc-timegrid-event.session-class,
+.fc-daygrid-event.session-class {
   --fc-event-bg-color: #9333ea !important;
   --fc-event-border-color: #9333ea !important;
+  background-color: #9333ea !important;
+  border-color: #9333ea !important;
 }
 
-.session-assessment {
+.fc-event.session-assessment,
+.fc-timegrid-event.session-assessment,
+.fc-daygrid-event.session-assessment {
   --fc-event-bg-color: oklch(0.65 0.22 28) !important;
   --fc-event-border-color: oklch(0.65 0.22 28) !important;
+  background-color: oklch(0.65 0.22 28) !important;
+  border-color: oklch(0.65 0.22 28) !important;
 }
 
-.session-consultation {
+.fc-event.session-consultation,
+.fc-timegrid-event.session-consultation,
+.fc-daygrid-event.session-consultation {
   --fc-event-bg-color: #0891b2 !important;
   --fc-event-border-color: #0891b2 !important;
+  background-color: #0891b2 !important;
+  border-color: #0891b2 !important;
 }
 
-.session-rehabilitation {
+.fc-event.session-rehabilitation,
+.fc-timegrid-event.session-rehabilitation,
+.fc-daygrid-event.session-rehabilitation {
   --fc-event-bg-color: #db2777 !important;
   --fc-event-border-color: #db2777 !important;
+  background-color: #db2777 !important;
+  border-color: #db2777 !important;
 }
 
 /* Status-based opacity */
@@ -280,7 +328,11 @@
   }
   
   .fc-event-title {
-    font-size: 10px;
+    font-size: 11px;
+  }
+
+  .fc-event-time {
+    font-size: 8px;
   }
   
   .fc-event-member,

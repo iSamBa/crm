@@ -24,6 +24,7 @@ import { useCalendarSessions } from '@/lib/hooks/use-sessions';
 import { TrainingSession } from '@/types';
 import { SessionModal } from './session-modal';
 import { SessionDetailModal } from './session-detail-modal';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 import './fullcalendar-session.css';
 
 interface FullCalendarSessionProps {
@@ -33,7 +34,7 @@ interface FullCalendarSessionProps {
 export function FullCalendarSession({ className }: FullCalendarSessionProps) {
   const calendarRef = useRef<FullCalendar>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState('timeGridWeek');
+  const [currentView, setCurrentView] = useState('dayGridMonth');
   const [selectedSession, setSelectedSession] = useState<TrainingSession | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -155,9 +156,14 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
   const renderEventContent = useCallback((eventInfo: any) => {
     const { session, memberName, trainerName } = eventInfo.event.extendedProps;
     
+    // Format start and end times
+    const startTime = dateFormatters.shortTime(eventInfo.event.start);
+    const endTime = dateFormatters.shortTime(eventInfo.event.end);
+    
     return (
       <div className="fc-event-content-custom">
         <div className="fc-event-title">{session.title}</div>
+        <div className="fc-event-time">{startTime} - {endTime}</div>
         <div className="fc-event-member">{memberName}</div>
         <div className="fc-event-trainer">{trainerName}</div>
       </div>
@@ -170,7 +176,7 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <CalendarIcon className="h-5 w-5" />
-            Training Schedule (FullCalendar)
+            Training Schedule
           </CardTitle>
           
           <div className="flex items-center gap-2">
@@ -240,7 +246,7 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
             
             {/* Current date display */}
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              {dateFormatters.calendarHeader(currentDate)}
             </span>
           </div>
           
@@ -287,7 +293,7 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
               headerToolbar={false} // We use custom toolbar
               height="auto"
               slotMinTime="09:00:00"
-              slotMaxTime="21:00:00"
+              slotMaxTime="22:00:00"
               slotDuration="00:30:00"
               slotLabelInterval="00:30:00"
               slotLabelFormat={{
@@ -313,7 +319,7 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
               businessHours={{
                 daysOfWeek: [1, 2, 3, 4, 5, 6], // Monday - Saturday
                 startTime: '09:00',
-                endTime: '21:00',
+                endTime: '22:00',
               }}
             />
             

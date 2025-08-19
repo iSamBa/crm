@@ -18,6 +18,7 @@ import {
   Edit
 } from 'lucide-react';
 import { getTrainerByIdServer, ServerTrainer } from '@/app/admin/trainers/actions';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 
 interface TrainerDetailViewProps {
   trainerId: string;
@@ -87,7 +88,7 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="secondary">Trainer</Badge>
                   <span className="text-sm text-muted-foreground">
-                    Member since {new Date(trainer.createdAt).toLocaleDateString()}
+                    Member since {dateFormatters.shortDate(trainer.createdAt)}
                   </span>
                 </div>
               </div>

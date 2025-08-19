@@ -16,6 +16,7 @@ import {
   type UpdateMemberData,
   type MemberFilters
 } from '@/lib/schemas';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 import { queryKeys } from '@/lib/query-client';
 
 // Types exported from schemas - no need to duplicate
@@ -214,10 +215,11 @@ class MemberService extends BaseService {
       }
     );
 
-    return {
-      data: result.error ? null : { success: true },
-      error: result.error
-    };
+    if (result.error) {
+      return { data: null, error: result.error };
+    }
+    
+    return { data: { success: true }, error: null };
   }
 
   // Delete multiple members with cache invalidation
@@ -239,10 +241,11 @@ class MemberService extends BaseService {
       }
     );
 
-    return {
-      data: result.error ? null : { success: true },
-      error: result.error
-    };
+    if (result.error) {
+      return { data: null, error: result.error };
+    }
+    
+    return { data: { success: true }, error: null };
   }
 
   // Get member statistics with caching
@@ -362,7 +365,7 @@ class MemberService extends BaseService {
           type: 'member_joined',
           title: 'New member registration',
           description: `${member.first_name} ${member.last_name} joined`,
-          time: new Date(member.created_at).toLocaleString(),
+          time: dateFormatters.shortDateTime(member.created_at),
           memberName: `${member.first_name} ${member.last_name}`,
           status: member.membership_status,
           timestamp: member.created_at,

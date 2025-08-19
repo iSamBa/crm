@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp } from 'lucide-react';
-import { memberService, MemberDistribution } from '@/lib/services/member-service';
+import { MemberDistribution } from '@/lib/services/member-service';
+import { useMemberDistribution } from '@/lib/hooks/use-members-modern';
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -59,31 +60,8 @@ const CustomLegend = ({ payload }: { payload?: Array<{ payload: MemberDistributi
 };
 
 export function MemberDistributionChart() {
-  const [distribution, setDistribution] = useState<MemberDistribution[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: distribution = [], isLoading, error } = useMemberDistribution();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    fetchDistribution();
-  }, []);
-
-  const fetchDistribution = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await memberService.getMemberDistribution();
-      
-      if (error) {
-        setError(error);
-      } else {
-        setDistribution(data || []);
-      }
-    } catch {
-      setError('Failed to fetch member distribution');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const totalMembers = distribution.reduce((sum, item) => sum + item.count, 0);
 

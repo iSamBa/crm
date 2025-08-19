@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { format, formatDuration, intervalToDuration } from 'date-fns';
+import { formatDuration, intervalToDuration } from 'date-fns';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 import {
   Dialog,
   DialogContent,
@@ -302,7 +303,7 @@ export function SessionDetailModal({
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Scheduled:</span>
-                      <span>{format(new Date(session.scheduledDate), 'PPp')}</span>
+                      <span>{dateFormatters.longDateTime(session.scheduledDate)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
@@ -313,14 +314,14 @@ export function SessionDetailModal({
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Actual Start:</span>
-                        <span>{format(new Date(session.actualStartTime), 'PPp')}</span>
+                        <span>{dateFormatters.longDateTime(session.actualStartTime)}</span>
                       </div>
                     )}
                     {session.actualEndTime && (
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Actual End:</span>
-                        <span>{format(new Date(session.actualEndTime), 'PPp')}</span>
+                        <span>{dateFormatters.longDateTime(session.actualEndTime)}</span>
                       </div>
                     )}
                     {sessionDuration && (
@@ -540,7 +541,7 @@ export function SessionDetailModal({
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline">{comment.commentType}</Badge>
                               <span className="text-sm text-muted-foreground">
-                                {format(new Date(comment.createdAt), 'PPp')}
+                                {dateFormatters.longDateTime(comment.createdAt)}
                               </span>
                               {comment.isPrivate && (
                                 <Badge variant="secondary">Private</Badge>

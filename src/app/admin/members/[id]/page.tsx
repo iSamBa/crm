@@ -37,6 +37,7 @@ import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
 import Link from 'next/link';
 import { AdminLayout } from '@/components/layout/admin-layout';
+import { dateFormatters, dateUtils } from '@/lib/utils/date-formatting';
 
 export default function MemberDetailPage() {
   const params = useParams();
@@ -187,7 +188,7 @@ export default function MemberDetailPage() {
                 
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>Joined {new Date(member.joinDate).toLocaleDateString()}</span>
+                  <span>Joined {dateFormatters.shortDate(member.joinDate)}</span>
                 </div>
               </div>
 
@@ -243,7 +244,7 @@ export default function MemberDetailPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm">Member Since</span>
                 <span className="text-sm font-medium">
-                  {Math.floor((Date.now() - new Date(member.joinDate).getTime()) / (1000 * 60 * 60 * 24))} days
+                  {dateUtils.daysBetween(member.joinDate, new Date())} days
                 </span>
               </div>
               <div className="flex items-center justify-between">

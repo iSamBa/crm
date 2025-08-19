@@ -20,6 +20,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -39,10 +49,11 @@ import {
   ChevronRight,
   ArrowLeft
 } from 'lucide-react';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 import { Member } from '@/types';
 import { MemberForm } from '@/components/members/member-form';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { useMembers, useMemberActions } from '@/lib/hooks/use-members';
+import { useMembers, useDeleteMembers } from '@/lib/hooks/use-members-modern';
 import { testMemberAccess } from '@/lib/debug/test-member-access';
 import { MemberDetailView } from '@/components/members/member-detail-view';
 import { MemberDistributionChart } from '@/components/charts/member-distribution-chart';
@@ -58,14 +69,16 @@ export default function MembersPage() {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
   const [isExporting, setIsExporting] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const itemsPerPage = 10;
 
-  // Use the new hooks
-  const { members, isLoading, refetch } = useMembers({
-    status: statusFilter,
-    searchTerm: searchTerm
+  // Use the modern TanStack Query hooks
+  const { data: members = [], isLoading } = useMembers({
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    searchTerm: searchTerm || undefined
   });
-  const { deleteMembers } = useMemberActions();
+  const deleteMembers = useDeleteMembers();
 
   // Since filtering is now handled by the hook, we can use members directly
   const filteredMembers = members;
@@ -75,23 +88,28 @@ export default function MembersPage() {
 
   const handleMemberCreated = () => {
     setIsCreateDialogOpen(false);
-    refetch();
+    // TanStack Query will automatically refetch and update cache
   };
 
   const handleMemberUpdated = () => {
     setEditingMember(null);
-    refetch();
+    // TanStack Query will automatically refetch and update cache
   };
 
-  const handleDeleteMember = async (memberId: string) => {
-    if (!confirm('Are you sure you want to delete this member?')) return;
+  const handleDeleteMember = (memberId: string) => {
+    setMemberToDelete(memberId);
+  };
 
-    const result = await deleteMembers([memberId]);
-    
-    if (result.data?.success) {
-      refetch();
-    } else {
-      console.error('Error deleting member:', result.error);
+  const confirmDeleteMember = async () => {
+    if (!memberToDelete) return;
+
+    try {
+      await deleteMembers.mutateAsync([memberToDelete]);
+      setMemberToDelete(null);
+      // TanStack Query will automatically update cache
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      // Keep dialog open on error so user can retry
     }
   };
 
@@ -141,16 +159,18 @@ export default function MembersPage() {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedMembers.length} members?`)) return;
-    
-    const result = await deleteMembers(selectedMembers);
-    
-    if (result.data?.success) {
+  const handleBulkDelete = () => {
+    setShowBulkDeleteDialog(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      await deleteMembers.mutateAsync(selectedMembers);
       setSelectedMembers([]);
-      refetch();
-    } else {
-      console.error('Error deleting members:', result.error);
+      setShowBulkDeleteDialog(false);
+      // TanStack Query will automatically update cache
+    } catch (error) {
+      console.error('Error deleting members:', error);
     }
   };
 
@@ -414,7 +434,7 @@ export default function MembersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {new Date(member.joinDate).toLocaleDateString()}
+                      {dateFormatters.shortDate(member.joinDate)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">
@@ -505,6 +525,50 @@ export default function MembersPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Delete Member Confirmation Dialog */}
+      <AlertDialog open={!!memberToDelete} onOpenChange={() => setMemberToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Member</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this member? This action cannot be undone and will permanently remove all member data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteMember}
+              disabled={deleteMembers.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteMembers.isPending ? 'Deleting...' : 'Delete Member'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Multiple Members</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedMembers.length} members? This action cannot be undone and will permanently remove all selected member data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmBulkDelete}
+              disabled={deleteMembers.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteMembers.isPending ? 'Deleting...' : `Delete ${selectedMembers.length} Members`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </AdminLayout>
   );

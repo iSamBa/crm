@@ -78,22 +78,9 @@ export function downloadCSV(csvContent: string, filename: string): void {
 }
 
 /**
- * Format date for CSV export
+ * Format date for CSV export - now uses centralized date formatting
  */
-export function formatDateForCSV(date: string | Date | null): string {
-  if (!date) return '';
-  
-  try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  } catch {
-    return '';
-  }
-}
+export { formatDateForCSV } from './date-formatting';
 
 /**
  * Format array for CSV export

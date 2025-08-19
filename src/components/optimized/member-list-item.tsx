@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Edit, Trash2, Eye } from 'lucide-react';
 import { Member } from '@/types';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 
 interface MemberListItemProps {
   member: Member;
@@ -66,7 +67,7 @@ export const MemberListItem = memo(function MemberListItem({
         </Badge>
       </TableCell>
       <TableCell>
-        {new Date(member.joinDate).toLocaleDateString()}
+        {dateFormatters.shortDate(member.joinDate)}
       </TableCell>
       <TableCell className="text-right">
         <div className="flex items-center justify-end space-x-2">

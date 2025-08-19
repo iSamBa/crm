@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Phone, Calendar, Heart, AlertTriangle, User } from 'lucide-react';
 import { Member } from '@/types';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 
 interface MemberInfoCardProps {
   member: Member;
@@ -63,7 +64,7 @@ export function MemberInfoCard({ member }: MemberInfoCardProps) {
               
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span>Joined {new Date(member.joinDate).toLocaleDateString()}</span>
+                <span>Inscrit le {dateFormatters.mediumDate(member.joinDate)}</span>
               </div>
             </div>
           </div>

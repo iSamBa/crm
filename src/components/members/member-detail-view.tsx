@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useMember } from '@/lib/hooks/use-members';
+import { useMember } from '@/lib/hooks/use-members-modern';
 import { MemberHeader } from './member-header';
 import { MemberInfoCard } from './member-info-card';
 import { EmergencyContactCard } from './emergency-contact-card';
@@ -14,16 +14,16 @@ interface MemberDetailViewProps {
 }
 
 export function MemberDetailView({ memberId, onBack }: MemberDetailViewProps) {
-  const { member, isLoading, error, refetch } = useMember(memberId);
+  const { data: member, isLoading, error } = useMember(memberId);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleMemberUpdated = () => {
     setIsEditDialogOpen(false);
-    refetch();
+    // TanStack Query will automatically refetch and update cache
   };
 
   const handleSubscriptionUpdated = () => {
-    refetch();
+    // TanStack Query will automatically refetch and update cache
   };
 
   // Go back if member not found or error

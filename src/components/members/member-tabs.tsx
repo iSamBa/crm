@@ -59,7 +59,7 @@ export function MemberTabs({ member, onSubscriptionUpdated }: MemberTabsProps) {
                 Add Subscription
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="w-[50vw] max-w-[50vw] min-w-[1200px] h-[95vh] overflow-y-auto p-6" style={{ width: '50vw', maxWidth: '50vw' }}>
               <DialogHeader>
                 <DialogTitle>Add New Subscription</DialogTitle>
               </DialogHeader>
