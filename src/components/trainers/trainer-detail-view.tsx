@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { getTrainerByIdServer, ServerTrainer } from '@/app/admin/trainers/actions';
 import { dateFormatters } from '@/lib/utils/date-formatting';
+import { TrainerSessionsList } from './trainer-sessions-list';
+import { useTrainerStats } from '@/lib/hooks/use-trainer-stats';
 
 interface TrainerDetailViewProps {
   trainerId: string;
@@ -29,6 +31,9 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
   const [trainer, setTrainer] = useState<ServerTrainer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get trainer statistics
+  const { data: stats, isLoading: statsLoading } = useTrainerStats(trainerId);
 
   useEffect(() => {
     const fetchTrainer = async () => {
@@ -200,7 +205,13 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">
+                      {statsLoading ? (
+                        <span className="animate-pulse bg-muted h-6 w-8 rounded inline-block"></span>
+                      ) : (
+                        stats?.activeClients || 0
+                      )}
+                    </p>
                     <p className="text-sm text-muted-foreground">Active Clients</p>
                   </div>
                 </div>
@@ -212,7 +223,13 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">
+                      {statsLoading ? (
+                        <span className="animate-pulse bg-muted h-6 w-8 rounded inline-block"></span>
+                      ) : (
+                        stats?.sessionsThisMonth || 0
+                      )}
+                    </p>
                     <p className="text-sm text-muted-foreground">Sessions This Month</p>
                   </div>
                 </div>
@@ -224,7 +241,13 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-2xl font-bold">0h</p>
+                    <p className="text-2xl font-bold">
+                      {statsLoading ? (
+                        <span className="animate-pulse bg-muted h-6 w-8 rounded inline-block"></span>
+                      ) : (
+                        `${stats?.hoursThisWeek || 0}h`
+                      )}
+                    </p>
                     <p className="text-sm text-muted-foreground">Hours This Week</p>
                   </div>
                 </div>
@@ -236,7 +259,13 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-2xl font-bold">$0</p>
+                    <p className="text-2xl font-bold">
+                      {statsLoading ? (
+                        <span className="animate-pulse bg-muted h-6 w-8 rounded inline-block"></span>
+                      ) : (
+                        `$${stats?.earningsThisMonth || 0}`
+                      )}
+                    </p>
                     <p className="text-sm text-muted-foreground">Earnings This Month</p>
                   </div>
                 </div>
@@ -246,14 +275,13 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
         </TabsContent>
 
         <TabsContent value="sessions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Training Sessions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Session management will be integrated here.</p>
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold">Training Sessions</h3>
+              <p className="text-sm text-muted-foreground">View and manage all training sessions for this trainer</p>
+            </div>
+          </div>
+          <TrainerSessionsList trainerId={trainerId} />
         </TabsContent>
 
         <TabsContent value="availability" className="space-y-4">

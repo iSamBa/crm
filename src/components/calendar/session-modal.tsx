@@ -28,6 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -98,6 +99,28 @@ export function SessionModal({
     ? Math.round((defaultEndDate.getTime() - defaultDate.getTime()) / (1000 * 60))
     : 60;
 
+  // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+  const formatDateTimeLocal = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      // Format to YYYY-MM-DDTHH:mm for datetime-local input
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
+  };
+
   const form = useForm<SessionFormData>({
     resolver: zodResolver(sessionSchema),
     defaultValues: {
@@ -106,7 +129,7 @@ export function SessionModal({
       type: session?.type || 'personal',
       title: session?.title || '',
       description: session?.description || '',
-      scheduledDate: session?.scheduledDate || defaultDate?.toISOString().slice(0, 16) || '',
+      scheduledDate: formatDateTimeLocal(session?.scheduledDate) || (defaultDate?.toISOString().slice(0, 16)) || '',
       duration: session?.duration || defaultDuration,
       cost: session?.cost || 0,
       sessionRoom: session?.sessionRoom || '',
@@ -118,6 +141,42 @@ export function SessionModal({
 
   const watchedTrainerId = form.watch('trainerId');
   const watchedScheduledDate = form.watch('scheduledDate');
+
+  // Update form when session changes (for editing different sessions)
+  useEffect(() => {
+    if (session && isOpen) {
+      form.reset({
+        memberId: session.memberId || '',
+        trainerId: session.trainerId || '',
+        type: session.type || 'personal',
+        title: session.title || '',
+        description: session.description || '',
+        scheduledDate: formatDateTimeLocal(session.scheduledDate) || '',
+        duration: session.duration || defaultDuration,
+        cost: session.cost || 0,
+        sessionRoom: session.sessionRoom || '',
+        equipmentNeeded: session.equipmentNeeded?.join(', ') || '',
+        sessionGoals: session.sessionGoals || '',
+        preparationNotes: session.preparationNotes || '',
+      });
+    } else if (!session && isOpen) {
+      // Reset form for new session
+      form.reset({
+        memberId: defaultMemberId || '',
+        trainerId: defaultTrainerId || '',
+        type: 'personal',
+        title: '',
+        description: '',
+        scheduledDate: defaultDate?.toISOString().slice(0, 16) || '',
+        duration: defaultDuration,
+        cost: 0,
+        sessionRoom: '',
+        equipmentNeeded: '',
+        sessionGoals: '',
+        preparationNotes: '',
+      });
+    }
+  }, [session, isOpen, defaultMemberId, defaultTrainerId, defaultDate, defaultDuration, form]);
   const watchedDuration = form.watch('duration');
 
   // Check for conflicts when trainer, date, or duration changes
@@ -308,9 +367,10 @@ export function SessionModal({
                         <FormItem>
                           <FormLabel>Date & Time</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="datetime-local" 
-                              {...field}
+                            <DateTimePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Select date and time"
                             />
                           </FormControl>
                           <FormMessage />

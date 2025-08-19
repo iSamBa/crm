@@ -1,0 +1,32 @@
+
+> fitness-studio-crm@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use by process 4298
+76103, using available port 3001 instead.
+   ▲ Next.js 15.4.6 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://172.20.10.2:3001
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ reactCompiler
+     · optimizePackageImports
+
+ ✓ Starting...
+ ✓ Ready in 1041ms
+ ○ Compiling /api/setup/training-sessions-schema ...
+ ✓ Compiled /api/setup/training-sessions-schema in 1263ms
+Updating training sessions schema...
+Error creating session_comments: {
+  code: 'PGRST202',
+  details: 'Searched for the function public.exec_sql with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: null,
+  message: 'Could not find the function public.exec_sql(query) in the schema cache'
+}
+Error creating trainer_availability: {
+  code: 'PGRST202',
+  details: 'Searched for the function public.exec_sql with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.',
+  hint: null,
+  message: 'Could not find the function public.exec_sql(query) in the schema cache'
+}
+ POST /api/setup/training-sessions-schema 200 in 1988ms

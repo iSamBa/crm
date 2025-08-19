@@ -35,6 +35,7 @@ import { memberService } from '@/lib/services/member-service';
 import { MemberForm } from '@/components/members/member-form';
 import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
+import { MemberSessionsList } from '@/components/members/member-sessions-list';
 import Link from 'next/link';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { dateFormatters, dateUtils } from '@/lib/utils/date-formatting';
@@ -391,15 +392,14 @@ export default function MemberDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="sessions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Training Sessions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Session management coming soon...</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="sessions" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">Training Sessions</h3>
+              <p className="text-sm text-muted-foreground">View and manage all training sessions for this member</p>
+            </div>
+          </div>
+          <MemberSessionsList memberId={memberId} />
         </TabsContent>
 
         <TabsContent value="progress">

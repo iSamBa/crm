@@ -92,6 +92,12 @@ export const invalidateQueries = {
       queryKey: queryKeys.sessions.member(memberId, undefined) 
     }),
   },
+  sessionComments: {
+    all: () => queryClient.invalidateQueries({ queryKey: ['sessions', 'comments'] }),
+    session: (sessionId: string) => queryClient.invalidateQueries({ 
+      queryKey: queryKeys.sessions.comments(sessionId) 
+    }),
+  },
   subscriptions: {
     all: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.all }),
     member: (memberId: string) => queryClient.invalidateQueries({ 

@@ -1,0 +1,182 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { memberService } from '@/lib/services/member-service';
+import { subscriptionService } from '@/lib/services/subscription-service';
+import { sessionService } from '@/lib/services/session-service';
+
+export interface DashboardStats {
+  totalMembers: number;
+  monthlyRevenue: number;
+  activeSubscriptions: number;
+  dailyCheckins: number;
+  // Additional computed stats
+  revenueGrowth?: number;
+  memberGrowth?: number;
+  subscriptionGrowth?: number;
+}
+
+export function useDashboardStats() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalMembers: 0,
+    monthlyRevenue: 0,
+    activeSubscriptions: 0,
+    dailyCheckins: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Fetch all stats in parallel
+      const [memberStatsResult, subscriptionStatsResult, todaySessionsResult] = await Promise.all([
+        memberService.getMemberStats(),
+        subscriptionService.getSubscriptionStats(),
+        sessionService.getSessionsByDateRange(
+          new Date().toISOString().split('T')[0],
+          new Date().toISOString().split('T')[0],
+          { status: 'completed' }
+        )
+      ]);
+
+      if (memberStatsResult.error) {
+        throw new Error(`Member stats error: ${memberStatsResult.error}`);
+      }
+
+      if (subscriptionStatsResult.error) {
+        throw new Error(`Subscription stats error: ${subscriptionStatsResult.error}`);
+      }
+
+      if (todaySessionsResult.error) {
+        console.warn('Session stats error:', todaySessionsResult.error);
+      }
+
+      const memberStats = memberStatsResult.data;
+      const subscriptionStats = subscriptionStatsResult.data;
+      const todaySessions = todaySessionsResult.data || [];
+
+      // Calculate monthly revenue from active subscriptions
+      const monthlyRevenue = subscriptionStats?.totalRevenue || 0;
+
+      // Calculate member growth (if we have historical data)
+      const memberGrowth = memberStats?.newThisMonth ? 
+        Math.round((memberStats.newThisMonth / (memberStats.totalMembers - memberStats.newThisMonth || 1)) * 100) : 
+        20; // Default growth percentage
+
+      // Calculate subscription growth
+      const subscriptionGrowth = Math.round((subscriptionStats?.activeSubscriptions || 0) / Math.max(subscriptionStats?.totalSubscriptions || 1, 1) * 100) - 50;
+
+      // Revenue growth (mock calculation - would need historical data)
+      const revenueGrowth = 12;
+
+      const dashboardStats: DashboardStats = {
+        totalMembers: memberStats?.totalMembers || 0,
+        monthlyRevenue,
+        activeSubscriptions: subscriptionStats?.activeSubscriptions || 0,
+        dailyCheckins: todaySessions.length,
+        revenueGrowth,
+        memberGrowth,
+        subscriptionGrowth,
+      };
+
+      setStats(dashboardStats);
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch dashboard stats');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  return {
+    stats,
+    isLoading,
+    error,
+    refetch: fetchStats,
+  };
+}
+
+// Hook for recent activities across all services
+export function useRecentActivities(limit = 10) {
+  const [activities, setActivities] = useState<Array<{
+    type: string;
+    title: string;
+    description: string;
+    time: string;
+    timestamp: string;
+    [key: string]: unknown;
+  }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchActivities = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Get recent member activities
+      const { data: memberActivities, error: memberError } = await memberService.getRecentMemberActivities(limit);
+      
+      if (memberError) {
+        throw new Error(`Member activities error: ${memberError}`);
+      }
+
+      // Get recent sessions (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data: recentSessions, error: sessionsError } = await sessionService.getSessionsByDateRange(
+        sevenDaysAgo.toISOString().split('T')[0],
+        new Date().toISOString().split('T')[0]
+      );
+
+      if (sessionsError) {
+        console.warn('Sessions activities error:', sessionsError);
+      }
+
+      // Transform session data to activities
+      const sessionActivities = (recentSessions || []).slice(0, limit).map(session => ({
+        type: 'session_scheduled',
+        title: 'Training session scheduled',
+        description: `${session.title} with ${session.member?.firstName || 'Member'} ${session.member?.lastName || ''}`.trim(),
+        time: new Date(session.scheduledDate).toLocaleDateString(),
+        sessionTitle: session.title,
+        memberName: session.member ? `${session.member.firstName} ${session.member.lastName}` : 'Unknown Member',
+        trainerName: session.trainer ? `${session.trainer.firstName} ${session.trainer.lastName}` : 'Unknown Trainer',
+        timestamp: session.scheduledDate,
+      }));
+
+      // Combine and sort activities by timestamp
+      const allActivities = [
+        ...(memberActivities || []),
+        ...sessionActivities
+      ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+       .slice(0, limit);
+
+      setActivities(allActivities);
+    } catch (err) {
+      console.error('Error fetching recent activities:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch activities');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [limit]);
+
+  useEffect(() => {
+    fetchActivities();
+  }, [fetchActivities]);
+
+  return {
+    activities,
+    isLoading,
+    error,
+    refetch: fetchActivities,
+  };
+}

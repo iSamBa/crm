@@ -6,6 +6,7 @@ import { DollarSign, TrendingUp, Clock, FileText, Camera, Activity, Plus } from 
 import { Member } from '@/types';
 import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
+import { MemberSessionsList } from './member-sessions-list';
 
 interface MemberTabsProps {
   member: Member;
@@ -82,11 +83,13 @@ export function MemberTabs({ member, onSubscriptionUpdated }: MemberTabsProps) {
       </TabsContent>
 
       <TabsContent value="sessions" className="space-y-4">
-        <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-          <Clock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Training Sessions</h3>
-          <p className="text-gray-500 mb-4">Session tracking functionality coming soon</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">Training Sessions</h3>
+            <p className="text-sm text-muted-foreground">View and manage all training sessions for this member</p>
+          </div>
         </div>
+        <MemberSessionsList memberId={member.id} />
       </TabsContent>
 
       <TabsContent value="progress" className="space-y-4">

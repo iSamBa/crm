@@ -1,43 +1,31 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, 
   Calendar,
-  UserCheck
+  UserCheck,
+  Loader2
 } from 'lucide-react';
+import { useRecentActivities } from '@/lib/hooks/use-dashboard-stats';
 
-// Server Component for static activity feed
+// Client Component for real-time activity feed
 export function AdminDashboardActivities() {
-  // In a real app, you could fetch recent activities on the server
-  const activities = [
-    {
-      id: '1',
-      type: 'member_registration',
-      title: 'New member registration',
-      description: 'John Doe joined Premium plan',
-      icon: UserCheck,
-      iconColor: 'text-primary',
-      time: '2 min ago',
-    },
-    {
-      id: '2',
-      type: 'payment',
-      title: 'Payment received',
-      description: '$89 monthly subscription',
-      icon: DollarSign,
-      iconColor: 'text-blue-500',
-      time: '5 min ago',
-    },
-    {
-      id: '3',
-      type: 'session',
-      title: 'Session scheduled',
-      description: 'Personal training with Sarah',
-      icon: Calendar,
-      iconColor: 'text-purple-500',
-      time: '10 min ago',
-    },
-  ];
+  const { activities, isLoading, error } = useRecentActivities(5);
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'member_joined':
+        return { icon: UserCheck, color: 'text-primary' };
+      case 'session_scheduled':
+        return { icon: Calendar, color: 'text-purple-500' };
+      case 'payment':
+        return { icon: DollarSign, color: 'text-blue-500' };
+      default:
+        return { icon: UserCheck, color: 'text-muted-foreground' };
+    }
+  };
 
   return (
     <Card>
@@ -45,23 +33,40 @@ export function AdminDashboardActivities() {
         <CardTitle>Recent Activities</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {activities.map((activity) => {
-            const IconComponent = activity.icon;
-            return (
-              <div key={activity.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <IconComponent className={`h-5 w-5 ${activity.iconColor}`} />
-                  <div>
-                    <p className="font-medium">{activity.title}</p>
-                    <p className="text-sm text-muted-foreground">{activity.description}</p>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">Loading activities...</span>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-destructive">Error loading activities</p>
+          </div>
+        ) : activities.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">No recent activities</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activities.map((activity, index) => {
+              const { icon: IconComponent, color } = getActivityIcon(activity.type);
+              return (
+                <div key={`${activity.type}-${index}`} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <IconComponent className={`h-5 w-5 ${color}`} />
+                    <div>
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground">{activity.description}</p>
+                    </div>
                   </div>
+                  <Badge variant="secondary">{activity.time}</Badge>
                 </div>
-                <Badge variant="secondary">{activity.time}</Badge>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -38,10 +38,12 @@ import {
   UserX
 } from 'lucide-react';
 import { 
-  useSessionActions, 
+  useSessionActions
+} from '@/lib/hooks/use-sessions';
+import { 
   useSessionComments, 
   useCommentActions 
-} from '@/lib/hooks/use-sessions';
+} from '@/lib/hooks/use-session-comments';
 import { TrainingSession } from '@/types';
 import { SessionModal } from './session-modal';
 
@@ -75,8 +77,8 @@ export function SessionDetailModal({
     isLoading: isActionLoading
   } = useSessionActions();
 
-  const { comments, isLoading: isCommentsLoading, refetch: refetchComments } = useSessionComments(session.id);
-  const { addComment, isLoading: isCommentLoading } = useCommentActions();
+  const { data: comments = [], isLoading: isCommentsLoading } = useSessionComments(session.id);
+  const { addComment, isLoading: isCommentLoading, error: commentError } = useCommentActions();
 
   // Reset states when session changes
   useEffect(() => {
@@ -88,10 +90,24 @@ export function SessionDetailModal({
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
-    const result = await addComment(session.id, newComment, commentType);
-    if (!result.error) {
+    console.log('Adding comment:', {
+      sessionId: session.id,
+      comment: newComment,
+      commentType,
+      isPrivate: false
+    });
+
+    try {
+      addComment({
+        sessionId: session.id,
+        comment: newComment,
+        commentType,
+        isPrivate: false
+      });
+      
       setNewComment('');
-      refetchComments();
+    } catch (error) {
+      console.error('Error adding comment:', error);
     }
   };
 
@@ -515,8 +531,13 @@ export function SessionDetailModal({
                     disabled={isCommentLoading || !newComment.trim()}
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
-                    Add Comment
+                    {isCommentLoading ? 'Adding...' : 'Add Comment'}
                   </Button>
+                  {commentError && (
+                    <p className="text-sm text-red-500 mt-2">
+                      Error: {commentError.message}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 

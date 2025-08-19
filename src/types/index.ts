@@ -81,6 +81,13 @@ export interface RecurringPattern {
   occurrences?: number;
 }
 
+export type SessionCommentData = {
+  sessionId: string;
+  comment: string;
+  commentType: 'note' | 'progress' | 'issue' | 'goal' | 'equipment' | 'feedback' | 'reminder';
+  isPrivate: boolean;
+};
+
 export interface TrainingSession {
   id: string;
   memberId: string;

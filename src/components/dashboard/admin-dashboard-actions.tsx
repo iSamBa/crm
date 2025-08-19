@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Users, 
@@ -10,14 +11,15 @@ import {
 
 // Client Component for interactive quick actions
 export function AdminDashboardActions() {
+  const router = useRouter();
+
   const actions = [
     {
       id: 'add-member',
       title: 'Add Member',
       icon: Users,
       onClick: () => {
-        // Navigate to add member page
-        window.location.href = '/admin/members';
+        router.push('/admin/members');
       },
     },
     {
@@ -25,26 +27,23 @@ export function AdminDashboardActions() {
       title: 'Schedule Session',
       icon: Calendar,
       onClick: () => {
-        // Navigate to calendar
-        window.location.href = '/admin/calendar';
+        router.push('/admin/calendar');
       },
     },
     {
       id: 'process-payment',
-      title: 'Process Payment',
+      title: 'Manage Subscriptions',
       icon: DollarSign,
       onClick: () => {
-        // Navigate to subscriptions
-        window.location.href = '/admin/subscriptions';
+        router.push('/admin/subscriptions');
       },
     },
     {
-      id: 'view-reports',
-      title: 'View Reports',
+      id: 'view-trainers',
+      title: 'Manage Trainers',
       icon: TrendingUp,
       onClick: () => {
-        // Navigate to reports (future feature)
-        console.log('Reports feature coming soon');
+        router.push('/admin/trainers');
       },
     },
   ];
