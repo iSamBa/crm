@@ -65,6 +65,16 @@ export const queryKeys = {
     member: (memberId: string) => [...queryKeys.subscriptions.all, 'member', memberId] as const,
     stats: () => [...queryKeys.subscriptions.all, 'stats'] as const,
   },
+
+  // Subscription Plans
+  subscriptionPlans: {
+    all: ['subscription-plans'] as const,
+    lists: () => [...queryKeys.subscriptionPlans.all, 'list'] as const,
+    list: (filters?: any) => [...queryKeys.subscriptionPlans.lists(), filters] as const,
+    details: () => [...queryKeys.subscriptionPlans.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.subscriptionPlans.details(), id] as const,
+    stats: () => [...queryKeys.subscriptionPlans.all, 'stats'] as const,
+  },
   
   // Trainers
   trainers: {
@@ -100,8 +110,15 @@ export const invalidateQueries = {
   },
   subscriptions: {
     all: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.all }),
+    plans: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.plans() }),
     member: (memberId: string) => queryClient.invalidateQueries({ 
       queryKey: queryKeys.subscriptions.member(memberId) 
     }),
+  },
+  subscriptionPlans: {
+    all: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptionPlans.all }),
+    lists: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptionPlans.lists() }),
+    detail: (id: string) => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptionPlans.detail(id) }),
+    stats: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptionPlans.stats() }),
   },
 };

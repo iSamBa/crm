@@ -30,3 +30,4 @@ Error creating trainer_availability: {
   message: 'Could not find the function public.exec_sql(query) in the schema cache'
 }
  POST /api/setup/training-sessions-schema 200 in 1988ms
+[?25h

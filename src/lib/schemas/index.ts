@@ -178,6 +178,48 @@ export const SubscriptionFiltersSchema = z.object({
 }).optional();
 
 // =============================================
+// SUBSCRIPTION PLAN SCHEMAS
+// =============================================
+
+export const CreateSubscriptionPlanSchema = z.object({
+  name: z.string()
+    .min(1, 'Plan name is required')
+    .max(100, 'Plan name must be less than 100 characters'),
+  description: z.string()
+    .max(500, 'Description must be less than 500 characters')
+    .optional()
+    .or(z.literal('')),
+  price: z.number()
+    .min(0, 'Price cannot be negative')
+    .max(10000, 'Price cannot exceed $10,000'),
+  duration: z.enum(['monthly', 'quarterly', 'annual']),
+  features: z.array(z.string().min(1, 'Feature cannot be empty'))
+    .min(1, 'At least one feature is required')
+    .max(20, 'Maximum 20 features allowed'),
+  maxSessionsPerMonth: z.number()
+    .min(0, 'Sessions cannot be negative')
+    .max(100, 'Maximum 100 sessions per month')
+    .optional(),
+  includesPersonalTraining: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+});
+
+export const UpdateSubscriptionPlanSchema = CreateSubscriptionPlanSchema.partial().extend({
+  id: z.string().uuid('Invalid plan ID'),
+});
+
+export const SubscriptionPlanFiltersSchema = z.object({
+  isActive: z.boolean().optional(),
+  duration: z.string().optional(),
+  priceMin: z.number().min(0).optional(),
+  priceMax: z.number().min(0).optional(),
+  includesPersonalTraining: z.boolean().optional(),
+  searchTerm: z.string().optional(),
+  sortBy: z.enum(['name', 'price', 'duration', 'createdAt']).default('name'),
+  sortOrder: z.enum(['asc', 'desc']).default('asc'),
+}).optional();
+
+// =============================================
 // TRAINER SCHEMAS
 // =============================================
 
@@ -222,6 +264,10 @@ export type CreateSubscriptionData = z.infer<typeof CreateSubscriptionSchema>;
 export type UpdateSubscriptionData = z.infer<typeof UpdateSubscriptionSchema>;
 export type SubscriptionFilters = z.infer<typeof SubscriptionFiltersSchema>;
 
+export type CreateSubscriptionPlanData = z.infer<typeof CreateSubscriptionPlanSchema>;
+export type UpdateSubscriptionPlanData = z.infer<typeof UpdateSubscriptionPlanSchema>;
+export type SubscriptionPlanFilters = z.infer<typeof SubscriptionPlanFiltersSchema>;
+
 export type TrainerAvailabilityData = z.infer<typeof TrainerAvailabilitySchema>;
 export type PaginationParams = z.infer<typeof PaginationSchema>;
 export type DateRange = z.infer<typeof DateRangeSchema>;
@@ -233,6 +279,7 @@ export type DateRange = z.infer<typeof DateRangeSchema>;
 export const validateMemberData = (data: unknown) => CreateMemberSchema.parse(data);
 export const validateSessionData = (data: unknown) => CreateSessionSchema.parse(data);
 export const validateSubscriptionData = (data: unknown) => CreateSubscriptionSchema.parse(data);
+export const validateSubscriptionPlanData = (data: unknown) => CreateSubscriptionPlanSchema.parse(data);
 
 // Safe parsing with error handling
 // ============================

@@ -1,0 +1,17 @@
+╭───────────────────────────────────────────────────╮
+│ ✻ Welcome to Claude Code!                         │
+│                                                   │
+│   /help for help, /status for your current setup  │
+│                                                   │
+│   cwd: /Users/aissam/Dev/fitness-studio-crm       │
+╰───────────────────────────────────────────────────╯
+
+> /clear 
+  ⎿  (no content)
+
+> Now i want you to implement a new feature, add a subscription plans menu in the sidebar, where only the admin can see, modify, create or delete the subscription plans. Start your thinking 
+  process from the database to the backend service to the UI.
+  ⎿  Claude usage limit reached. Your limit will reset at 12am (Europe/Berlin).
+
+      • /upgrade to increase your usage limit.
+

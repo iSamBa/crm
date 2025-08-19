@@ -23,7 +23,8 @@ import {
   BookOpen,
   TrendingUp,
   Home,
-  User
+  User,
+  Package
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -127,6 +128,7 @@ export const adminNavItems: SidebarItem[] = [
   { title: 'Members', href: '/admin/members', icon: Users },
   { title: 'Calendar', href: '/admin/calendar', icon: Calendar },
   { title: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
+  { title: 'Subscription Plans', href: '/admin/subscription-plans', icon: Package },
   { title: 'Payments', href: '/admin/payments', icon: DollarSign },
   { title: 'Trainers', href: '/admin/trainers', icon: UserCheck },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3 },

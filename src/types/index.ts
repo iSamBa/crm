@@ -55,12 +55,17 @@ export interface Subscription {
 export interface MembershipPlan {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   duration: 'monthly' | 'quarterly' | 'annual';
   features: string[];
+  maxSessionsPerMonth?: number;
+  includesPersonalTraining: boolean;
   isActive: boolean;
+  createdAt: string;
 }
+
+export type SubscriptionPlan = MembershipPlan;
 
 export interface Payment {
   id: string;
