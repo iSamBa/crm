@@ -181,18 +181,6 @@ export const SubscriptionFiltersSchema = z.object({
 // TRAINER SCHEMAS
 // =============================================
 
-export const TrainerAvailabilitySchema = z.object({
-  trainerId: z.string().uuid('Invalid trainer ID'),
-  dayOfWeek: z.number().min(0).max(6),
-  startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, 'Invalid time format'),
-  endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, 'Invalid time format'),
-  isAvailable: z.boolean().default(true),
-}).refine((data) => {
-  return data.endTime > data.startTime;
-}, {
-  message: 'End time must be after start time',
-  path: ['endTime'],
-});
 
 // =============================================
 // COMMON VALIDATION HELPERS
@@ -247,6 +235,103 @@ export const validateSessionData = (data: unknown) => CreateSessionSchema.parse(
 export const validateSubscriptionData = (data: unknown) => CreateSubscriptionSchema.parse(data);
 
 // Safe parsing with error handling
+// ============================
+// TRAINER SCHEMAS
+// ============================
+
+export const TrainerAvailabilitySlotSchema = z.object({
+  start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
+  end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format')
+});
+
+export const TrainerAvailabilitySchema = z.record(
+  z.string(), 
+  z.array(TrainerAvailabilitySlotSchema)
+).optional();
+
+export const CreateTrainerSchema = z.object({
+  firstName: z.string()
+    .min(1, 'First name is required')
+    .max(50, 'First name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'First name contains invalid characters'),
+  lastName: z.string()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Last name contains invalid characters'),
+  email: z.string()
+    .email('Invalid email format')
+    .min(1, 'Email is required'),
+  phone: z.string()
+    .regex(/^[\+]?[(]?[\d\s\-\(\)]{10,}$/, 'Invalid phone number format')
+    .optional()
+    .or(z.literal('')),
+  specializations: z.array(z.string().min(1, 'Specialization cannot be empty'))
+    .min(1, 'At least one specialization is required')
+    .max(10, 'Maximum 10 specializations allowed'),
+  certifications: z.array(z.string().min(1, 'Certification cannot be empty'))
+    .max(15, 'Maximum 15 certifications allowed')
+    .optional()
+    .default([]),
+  hourlyRate: z.number()
+    .min(0, 'Hourly rate cannot be negative')
+    .max(1000, 'Hourly rate seems too high')
+    .optional()
+    .default(50),
+  availability: TrainerAvailabilitySchema.optional().default({}),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be less than 128 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number')
+});
+
+export const UpdateTrainerSchema = z.object({
+  id: z.string().uuid('Invalid trainer ID'),
+  firstName: z.string()
+    .min(1, 'First name is required')
+    .max(50, 'First name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'First name contains invalid characters')
+    .optional(),
+  lastName: z.string()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Last name contains invalid characters')
+    .optional(),
+  email: z.string()
+    .email('Invalid email format')
+    .optional(),
+  phone: z.string()
+    .regex(/^[\+]?[(]?[\d\s\-\(\)]{10,}$/, 'Invalid phone number format')
+    .optional()
+    .or(z.literal('')),
+  specializations: z.array(z.string().min(1, 'Specialization cannot be empty'))
+    .min(1, 'At least one specialization is required')
+    .max(10, 'Maximum 10 specializations allowed')
+    .optional(),
+  certifications: z.array(z.string().min(1, 'Certification cannot be empty'))
+    .max(15, 'Maximum 15 certifications allowed')
+    .optional(),
+  hourlyRate: z.number()
+    .min(0, 'Hourly rate cannot be negative')
+    .max(1000, 'Hourly rate seems too high')
+    .optional(),
+  availability: TrainerAvailabilitySchema.optional()
+});
+
+export const TrainerFiltersSchema = z.object({
+  searchTerm: z.string().optional(),
+  specialization: z.string().optional(),
+  isActive: z.boolean().optional(),
+  hourlyRateMin: z.number().min(0).optional(),
+  hourlyRateMax: z.number().min(0).optional(),
+  sortBy: z.enum(['name', 'email', 'hourlyRate', 'createdAt']).default('name'),
+  sortOrder: z.enum(['asc', 'desc']).default('asc')
+}).optional();
+
+// Export types
+export type CreateTrainerData = z.infer<typeof CreateTrainerSchema>;
+export type UpdateTrainerData = z.infer<typeof UpdateTrainerSchema>;
+export type TrainerFilters = z.infer<typeof TrainerFiltersSchema>;
+
 export const safeParse = <T>(schema: z.ZodSchema<T>, data: unknown) => {
   const result = schema.safeParse(data);
   if (!result.success) {

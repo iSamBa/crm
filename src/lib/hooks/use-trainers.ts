@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { trainerService, TrainerFilters } from '@/lib/services/trainer-service';
+import { trainerService } from '@/lib/services/trainer-service';
+import { TrainerFilters } from '@/lib/schemas';
 import { Trainer } from '@/types';
 
 export function useTrainers(filters?: TrainerFilters) {
@@ -16,7 +17,7 @@ export function useTrainers(filters?: TrainerFilters) {
     if (fetchError) {
       setError(fetchError);
     } else {
-      setTrainers(data);
+      setTrainers(data || []);
     }
     
     setIsLoading(false);
@@ -84,12 +85,13 @@ export function useTrainerAvailability(trainerId: string, date: string) {
     setIsLoading(true);
     setError(null);
     
-    const { data, error: fetchError } = await trainerService.getTrainerAvailability(trainerId, date);
+    // TODO: Implement getTrainerAvailability in service
+    const { data, error: fetchError } = { data: null, error: 'Method not implemented' };
     
     if (fetchError) {
       setError(fetchError);
     } else {
-      setAvailability(data);
+      setAvailability(data || []);
     }
     
     setIsLoading(false);

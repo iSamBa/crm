@@ -69,10 +69,11 @@ export const queryKeys = {
   // Trainers
   trainers: {
     all: ['trainers'] as const,
-    list: () => [...queryKeys.trainers.all, 'list'] as const,
+    lists: (filters?: any) => [...queryKeys.trainers.all, 'list', filters] as const,
     detail: (id: string) => [...queryKeys.trainers.all, 'detail', id] as const,
     availability: (id: string, date?: string) => 
       [...queryKeys.trainers.all, 'availability', id, date] as const,
+    stats: () => [...queryKeys.trainers.all, 'stats'] as const,
   },
 } as const;
 
