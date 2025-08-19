@@ -9,6 +9,12 @@ import {
   TrendingUp,
   DollarSign
 } from 'lucide-react';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Trainer Dashboard - Fitness Studio CRM',
+  description: 'Manage your training sessions and track client progress',
+};
 
 export default function TrainerDashboard() {
   return (
