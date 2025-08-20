@@ -75,7 +75,8 @@ class SubscriptionPlanService extends BaseService {
       {
         logQuery: 'Fetching subscription plans',
         transform: (data: any[]) => data.map(plan => this.transformPlanData(plan)),
-        allowEmpty: true
+        allowEmpty: true,
+        expectArray: true
       }
     );
   }

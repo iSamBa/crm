@@ -15,6 +15,7 @@ export interface ServiceResult {
 export interface QueryOptions {
   logQuery?: string;
   allowEmpty?: boolean;
+  expectArray?: boolean;
   validate?: z.ZodSchema<any>;
   transform?: (data: any) => any;
 }
@@ -103,7 +104,9 @@ export abstract class BaseService {
       // Handle empty data
       if (data === null || data === undefined) {
         if (options.allowEmpty) {
-          return { data: data as T, error: null };
+          // For array types, return empty array instead of null
+          const emptyValue = options.expectArray ? [] : data;
+          return { data: emptyValue as T, error: null };
         }
         return { 
           data: null, 

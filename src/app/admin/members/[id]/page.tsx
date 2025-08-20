@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,8 +30,7 @@ import {
   Activity,
   Plus
 } from 'lucide-react';
-import { Member } from '@/types';
-import { memberService } from '@/lib/services/member-service';
+import { useMember } from '@/lib/hooks/use-members-modern';
 import { MemberForm } from '@/components/members/member-form';
 import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
@@ -45,38 +44,25 @@ export default function MemberDetailPage() {
   const router = useRouter();
   const memberId = params.id as string;
   
-  const [member, setMember] = useState<Member | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Modern TanStack Query hook for data fetching
+  const { 
+    data: member, 
+    isLoading, 
+    error: memberError 
+  } = useMember(memberId);
+  
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (memberId) {
-      fetchMember();
-    }
-  }, [memberId]);
-
-  const fetchMember = async () => {
-    try {
-      const { data, error } = await memberService.getMemberById(memberId);
-
-      if (error) {
-        console.error('Error fetching member:', error);
-        router.push('/admin/members');
-        return;
-      }
-
-      setMember(data);
-    } catch (error) {
-      console.error('Error fetching member:', error);
-      router.push('/admin/members');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Handle error by redirecting to members list
+  if (memberError) {
+    console.error('Error fetching member:', memberError);
+    router.push('/admin/members');
+    return null;
+  }
 
   const handleMemberUpdated = () => {
     setIsEditDialogOpen(false);
-    fetchMember();
+    // TanStack Query will automatically invalidate and refetch
   };
 
   const getStatusColor = (status: string) => {
@@ -139,7 +125,7 @@ export default function MemberDetailPage() {
                 Edit Member
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="!max-w-none !w-[95vw] max-h-[90vh] overflow-y-auto" style={{ maxWidth: 'none !important', width: '95vw !important' }}>
               <DialogHeader>
                 <DialogTitle>Edit Member</DialogTitle>
               </DialogHeader>

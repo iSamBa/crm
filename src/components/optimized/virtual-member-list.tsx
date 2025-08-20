@@ -71,6 +71,7 @@ export function VirtualMemberList({
   // Memoized list configuration
   const listConfig = useMemo(() => ({
     height,
+    width: '100%',
     itemCount: members.length,
     itemSize: itemHeight,
     overscanCount: 5, // Pre-render 5 items outside visible area

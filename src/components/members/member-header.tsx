@@ -31,7 +31,7 @@ export function MemberHeader({
               Edit Member
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="sm:max-w-7xl max-w-[95vw] w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Member</DialogTitle>
             </DialogHeader>

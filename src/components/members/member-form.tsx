@@ -17,6 +17,15 @@ import {
 } from '@/components/ui/select';
 import { Member } from '@/types';
 import { memberService } from '@/lib/services/member-service';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const memberSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -42,6 +51,7 @@ interface MemberFormProps {
 
 export function MemberForm({ member, onSuccess }: MemberFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [errorDialog, setErrorDialog] = useState<{isOpen: boolean, message: string}>({isOpen: false, message: ''});
   const isEditing = !!member;
 
   const {
@@ -106,14 +116,20 @@ export function MemberForm({ member, onSuccess }: MemberFormProps) {
 
       if (result.error) {
         console.error('Error saving member:', result.error);
-        alert('Error saving member: ' + result.error);
+        setErrorDialog({
+          isOpen: true,
+          message: 'Error saving member: ' + result.error
+        });
         return;
       }
 
       onSuccess();
     } catch (error) {
       console.error('Error saving member:', error);
-      alert('Unexpected error saving member');
+      setErrorDialog({
+        isOpen: true,
+        message: 'Unexpected error saving member. Please try again.'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -271,6 +287,21 @@ export function MemberForm({ member, onSuccess }: MemberFormProps) {
           {isLoading ? 'Saving...' : isEditing ? 'Update Member' : 'Add Member'}
         </Button>
       </div>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.isOpen} onOpenChange={() => setErrorDialog({isOpen: false, message: ''})}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Error</AlertDialogTitle>
+            <AlertDialogDescription>
+              {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }

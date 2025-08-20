@@ -106,9 +106,10 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
   const selectedMember = members.find(member => member.id === form.watch('memberId'));
 
   return (
-    <div className="space-y-6">
-      {/* Member Selection (only if memberId not provided) */}
-      {!memberId && (
+    <Form {...form}>
+      <div className="space-y-6">
+        {/* Member Selection (only if memberId not provided) */}
+        {!memberId && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -174,7 +175,7 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
           <p className="text-gray-600">Choose the perfect plan for your member&apos;s fitness journey</p>
         </div>
         
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {plans.map((plan, index) => {
             const isPopular = index === 1; // Mark second plan as popular
             const isSelected = selectedPlanId === plan.id;
@@ -279,8 +280,7 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
 
       {/* Subscription Details Form */}
       {selectedPlan && (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Form Fields - 2/3 width */}
               <div className="lg:col-span-2">
@@ -428,8 +428,8 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
               </div>
             </div>
           </form>
-        </Form>
       )}
-    </div>
+      </div>
+    </Form>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -41,8 +51,12 @@ import {
 import { Trainer } from '@/types';
 import { TrainerForm } from '@/components/trainers/trainer-form';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { useTrainerActions } from '@/lib/hooks/use-trainers-modern';
-import { getTrainersServer, getTrainerStatsServer, ServerTrainer } from './actions';
+import { 
+  useTrainers, 
+  useTrainerStats, 
+  useTrainerActions, 
+  useTrainerSpecializations 
+} from '@/lib/hooks/use-trainers-modern';
 import { TrainerDetailView } from '@/components/trainers/trainer-detail-view';
 import { TrainerStatsCards } from '@/components/trainers/trainer-stats-cards';
 
@@ -55,55 +69,29 @@ export default function TrainersPage() {
   const [selectedTrainers, setSelectedTrainers] = useState<string[]>([]);
   const [selectedTrainerId, setSelectedTrainerId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+  const [errorDialog, setErrorDialog] = useState<{isOpen: boolean, title: string, message: string}>({isOpen: false, title: '', message: ''});
+  const [deleteDialog, setDeleteDialog] = useState<{isOpen: boolean, trainerId: string | null, isMultiple: boolean, count: number}>({isOpen: false, trainerId: null, isMultiple: false, count: 0});
   const itemsPerPage = 10;
 
-  // Server-side data fetching
-  const [trainers, setTrainers] = useState<ServerTrainer[]>([]);
-  const [statsData, setStatsData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [specializations, setSpecializations] = useState<string[]>([]);
+  // Modern TanStack Query hooks for data fetching
+  const { 
+    data: trainers = [], 
+    isLoading,
+    error: trainersError
+  } = useTrainers({
+    searchTerm: searchTerm || undefined,
+    specialization: specializationFilter === 'all' ? undefined : specializationFilter,
+    sortBy: 'name',
+    sortOrder: 'asc'
+  });
+
+  const { 
+    data: statsData,
+    error: statsError
+  } = useTrainerStats();
+
+  const specializations = useTrainerSpecializations();
   const { deleteTrainer } = useTrainerActions();
-
-  // Fetch trainers data
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [trainersResult, statsResult] = await Promise.all([
-        getTrainersServer({
-          searchTerm: searchTerm || undefined,
-          specialization: specializationFilter === 'all' ? undefined : specializationFilter,
-          sortBy: 'name',
-          sortOrder: 'asc'
-        }),
-        getTrainerStatsServer()
-      ]);
-
-      if (trainersResult.error) {
-        console.error('Failed to fetch trainers:', trainersResult.error);
-      } else {
-        setTrainers(trainersResult.data);
-        // Extract unique specializations
-        const allSpecs = trainersResult.data.flatMap(t => t.specializations || []);
-        setSpecializations([...new Set(allSpecs)]);
-      }
-
-      if (statsResult.error) {
-        console.error('Failed to fetch stats:', statsResult.error);
-      } else {
-        setStatsData(statsResult.data);
-      }
-    } catch (error) {
-      console.error('Error fetching trainer data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [searchTerm, specializationFilter]);
-
-  const refetch = fetchData;
 
   // Filter and paginate trainers
   const filteredTrainers = trainers;
@@ -113,24 +101,39 @@ export default function TrainersPage() {
 
   const handleTrainerCreated = () => {
     setIsCreateDialogOpen(false);
-    refetch();
+    // TanStack Query will automatically invalidate and refetch
   };
 
   const handleTrainerUpdated = () => {
     setEditingTrainer(null);
-    refetch();
+    // TanStack Query will automatically invalidate and refetch
   };
 
   const handleDeleteTrainer = async (trainerId: string) => {
-    if (!confirm('Are you sure you want to delete this trainer? This will also remove their account access.')) return;
+    setDeleteDialog({
+      isOpen: true,
+      trainerId,
+      isMultiple: false,
+      count: 1
+    });
+  };
 
-    const result = await deleteTrainer.mutateAsync(trainerId);
+  const confirmDeleteTrainer = async () => {
+    if (!deleteDialog.trainerId) return;
+
+    const result = await deleteTrainer.mutateAsync(deleteDialog.trainerId);
     
     if (result.data?.success) {
-      refetch();
+      setDeleteDialog({isOpen: false, trainerId: null, isMultiple: false, count: 0});
+      // TanStack Query will automatically invalidate and refetch
     } else {
       console.error('Error deleting trainer:', result.error);
-      alert('Failed to delete trainer: ' + (result.error || 'Unknown error'));
+      setErrorDialog({
+        isOpen: true,
+        title: 'Delete Failed',
+        message: 'Failed to delete trainer: ' + (result.error || 'Unknown error')
+      });
+      setDeleteDialog({isOpen: false, trainerId: null, isMultiple: false, count: 0});
     }
   };
 
@@ -142,6 +145,15 @@ export default function TrainersPage() {
       </Badge>
     ));
   };
+
+  // Handle query errors
+  if (trainersError) {
+    console.error('Failed to fetch trainers:', trainersError);
+  }
+  
+  if (statsError) {
+    console.error('Failed to fetch stats:', statsError);
+  }
 
   if (isLoading) {
     return (
@@ -170,15 +182,28 @@ export default function TrainersPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedTrainers.length} trainers?`)) return;
-    
+    setDeleteDialog({
+      isOpen: true,
+      trainerId: null,
+      isMultiple: true,
+      count: selectedTrainers.length
+    });
+  };
+
+  const confirmBulkDelete = async () => {
     try {
       await Promise.all(selectedTrainers.map(id => deleteTrainer.mutateAsync(id)));
       setSelectedTrainers([]);
-      refetch();
+      setDeleteDialog({isOpen: false, trainerId: null, isMultiple: false, count: 0});
+      // TanStack Query will automatically invalidate and refetch
     } catch (error) {
       console.error('Error deleting trainers:', error);
-      alert('Failed to delete some trainers');
+      setErrorDialog({
+        isOpen: true,
+        title: 'Bulk Delete Failed',
+        message: 'Failed to delete some trainers. Please try again.'
+      });
+      setDeleteDialog({isOpen: false, trainerId: null, isMultiple: false, count: 0});
     }
   };
 
@@ -235,7 +260,7 @@ export default function TrainersPage() {
                   Add Trainer
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl">
+              <DialogContent className="sm:max-w-7xl max-w-[95vw] w-[95vw] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add New Trainer</DialogTitle>
                 </DialogHeader>
@@ -359,7 +384,7 @@ export default function TrainersPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setEditingTrainer(trainer)}
+                            onClick={() => setEditingTrainer(trainer as any)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -425,7 +450,7 @@ export default function TrainersPage() {
 
         {editingTrainer && (
           <Dialog open={!!editingTrainer} onOpenChange={() => setEditingTrainer(null)}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="sm:max-w-7xl max-w-[95vw] w-[95vw] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Edit Trainer</DialogTitle>
               </DialogHeader>
@@ -436,6 +461,48 @@ export default function TrainersPage() {
             </DialogContent>
           </Dialog>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialog.isOpen} onOpenChange={() => setDeleteDialog({isOpen: false, trainerId: null, isMultiple: false, count: 0})}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {deleteDialog.isMultiple ? 'Delete Multiple Trainers' : 'Delete Trainer'}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {deleteDialog.isMultiple 
+                  ? `Are you sure you want to delete ${deleteDialog.count} trainers? This action cannot be undone and will permanently remove their accounts and data.`
+                  : 'Are you sure you want to delete this trainer? This action cannot be undone and will permanently remove their account and data.'
+                }
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={deleteDialog.isMultiple ? confirmBulkDelete : confirmDeleteTrainer}
+                disabled={deleteTrainer.isPending}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleteTrainer.isPending ? 'Deleting...' : (deleteDialog.isMultiple ? `Delete ${deleteDialog.count} Trainers` : 'Delete Trainer')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Error Dialog */}
+        <AlertDialog open={errorDialog.isOpen} onOpenChange={() => setErrorDialog({isOpen: false, title: '', message: ''})}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{errorDialog.title}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {errorDialog.message}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

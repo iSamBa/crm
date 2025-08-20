@@ -190,12 +190,12 @@ export async function getTrainerByIdServer(trainerId: string): Promise<{
       firstName: data.first_name,
       lastName: data.last_name,
       phone: data.phone,
-      specializations: data.trainers.specializations || [],
-      certifications: data.trainers.certifications || [],
-      hourlyRate: data.trainers.hourly_rate || 0,
-      availability: data.trainers.availability || {},
-      bio: data.trainers.bio,
-      yearsExperience: data.trainers.years_experience,
+      specializations: data.trainers[0]?.specializations || [],
+      certifications: data.trainers[0]?.certifications || [],
+      hourlyRate: data.trainers[0]?.hourly_rate || 0,
+      availability: data.trainers[0]?.availability || {},
+      bio: data.trainers[0]?.bio,
+      yearsExperience: data.trainers[0]?.years_experience,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };

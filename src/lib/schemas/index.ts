@@ -220,6 +220,53 @@ export const SubscriptionPlanFiltersSchema = z.object({
 }).optional();
 
 // =============================================
+// USER PROFILE SCHEMAS  
+// =============================================
+
+export const UpdateUserProfileSchema = z.object({
+  firstName: z.string()
+    .min(1, 'First name is required')
+    .max(50, 'First name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'First name contains invalid characters'),
+  lastName: z.string()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Last name contains invalid characters'),
+  email: z.string()
+    .email('Invalid email format')
+    .min(1, 'Email is required'),
+  phone: z.string()
+    .regex(/^[\+]?[(]?[\d\s\-\(\)]{10,}$/, 'Invalid phone number format')
+    .optional()
+    .or(z.literal('')),
+  avatar: z.string().url('Invalid avatar URL').optional().or(z.literal(''))
+});
+
+export const ChangePasswordSchema = z.object({
+  currentPassword: z.string()
+    .min(1, 'Current password is required'),
+  newPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be less than 128 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one number'),
+  confirmPassword: z.string()
+    .min(1, 'Password confirmation is required')
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+
+export const UserPreferencesSchema = z.object({
+  emailNotifications: z.boolean().default(true),
+  smsNotifications: z.boolean().default(false),
+  sessionReminders: z.boolean().default(true),
+  marketingEmails: z.boolean().default(false),
+  theme: z.enum(['light', 'dark']).default('light'),
+  language: z.string().default('en'),
+  timezone: z.string().default('America/New_York')
+});
+
+// =============================================
 // TRAINER SCHEMAS
 // =============================================
 
@@ -378,6 +425,10 @@ export const TrainerFiltersSchema = z.object({
 export type CreateTrainerData = z.infer<typeof CreateTrainerSchema>;
 export type UpdateTrainerData = z.infer<typeof UpdateTrainerSchema>;
 export type TrainerFilters = z.infer<typeof TrainerFiltersSchema>;
+
+export type UpdateUserProfileData = z.infer<typeof UpdateUserProfileSchema>;
+export type ChangePasswordData = z.infer<typeof ChangePasswordSchema>;
+export type UserPreferencesData = z.infer<typeof UserPreferencesSchema>;
 
 export const safeParse = <T>(schema: z.ZodSchema<T>, data: unknown) => {
   const result = schema.safeParse(data);

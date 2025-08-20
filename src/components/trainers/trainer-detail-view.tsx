@@ -1,6 +1,4 @@
 'use client';
-
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,9 +15,9 @@ import {
   Target,
   Edit
 } from 'lucide-react';
-import { getTrainerByIdServer, ServerTrainer } from '@/app/admin/trainers/actions';
 import { dateFormatters } from '@/lib/utils/date-formatting';
 import { TrainerSessionsList } from './trainer-sessions-list';
+import { useTrainer } from '@/lib/hooks/use-trainers-modern';
 import { useTrainerStats } from '@/lib/hooks/use-trainer-stats';
 
 interface TrainerDetailViewProps {
@@ -28,35 +26,22 @@ interface TrainerDetailViewProps {
 }
 
 export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps) {
-  const [trainer, setTrainer] = useState<ServerTrainer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Modern TanStack Query hooks for data fetching
+  const { 
+    data: trainer, 
+    isLoading, 
+    error: trainerError 
+  } = useTrainer(trainerId);
   
-  // Get trainer statistics
-  const { data: stats, isLoading: statsLoading } = useTrainerStats(trainerId);
+  const { 
+    data: stats, 
+    isLoading: statsLoading 
+  } = useTrainerStats(trainerId);
 
-  useEffect(() => {
-    const fetchTrainer = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const result = await getTrainerByIdServer(trainerId);
-        
-        if (result.error) {
-          setError(result.error);
-        } else {
-          setTrainer(result.data);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch trainer');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTrainer();
-  }, [trainerId]);
+  // Handle errors
+  if (trainerError) {
+    console.error('Failed to fetch trainer:', trainerError);
+  }
 
   if (isLoading) {
     return (
@@ -66,7 +51,7 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
     );
   }
 
-  if (error || !trainer) {
+  if (trainerError || !trainer) {
     return (
       <div className="text-center p-8">
         <p className="text-red-600">Failed to load trainer details</p>

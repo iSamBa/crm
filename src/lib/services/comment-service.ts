@@ -130,7 +130,7 @@ export class CommentService extends BaseService {
    */
   async deleteComment(commentId: string): Promise<ServiceResponse<boolean>> {
     if (!commentId) {
-      return { data: null, error: 'Comment ID is required' };
+      return { data: false, error: 'Comment ID is required' };
     }
 
     return this.executeMutation(

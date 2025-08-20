@@ -52,7 +52,7 @@ export function SubscriptionPlanForm({
   const createMutation = useCreateSubscriptionPlan();
   const updateMutation = useUpdateSubscriptionPlan();
 
-  const form = useForm<CreateSubscriptionPlanData | UpdateSubscriptionPlanData>({
+  const form = useForm({
     resolver: zodResolver(isEditing ? UpdateSubscriptionPlanSchema : CreateSubscriptionPlanSchema),
     defaultValues: {
       name: '',

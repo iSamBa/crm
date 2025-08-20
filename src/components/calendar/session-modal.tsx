@@ -66,7 +66,7 @@ type SessionFormData = z.infer<typeof sessionSchema>;
 interface SessionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (updatedSession?: TrainingSession) => void;
   session?: TrainingSession; // For editing
   defaultDate?: Date;
   defaultEndDate?: Date;
@@ -231,7 +231,7 @@ export function SessionModal({
         return;
       }
 
-      onSuccess();
+      onSuccess(result.data || undefined);
     } catch (error) {
       console.error('Error submitting session:', error);
     }

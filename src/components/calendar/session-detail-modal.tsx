@@ -10,6 +10,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -60,7 +70,9 @@ export function SessionDetailModal({
   onClose,
   onUpdate
 }: SessionDetailModalProps) {
+  const [currentSession, setCurrentSession] = useState(session);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [commentType, setCommentType] = useState<'note' | 'progress' | 'issue' | 'goal' | 'equipment' | 'feedback' | 'reminder'>('note');
   const [memberRating, setMemberRating] = useState(session.memberRating || 0);
@@ -77,11 +89,12 @@ export function SessionDetailModal({
     isLoading: isActionLoading
   } = useSessionActions();
 
-  const { data: comments = [], isLoading: isCommentsLoading } = useSessionComments(session.id);
+  const { data: comments = [], isLoading: isCommentsLoading } = useSessionComments(currentSession.id);
   const { addComment, isLoading: isCommentLoading, error: commentError } = useCommentActions();
 
   // Reset states when session changes
   useEffect(() => {
+    setCurrentSession(session);
     setMemberRating(session.memberRating || 0);
     setTrainerRating(session.trainerRating || 0);
     setCompletionSummary(session.completionSummary || '');
@@ -99,7 +112,7 @@ export function SessionDetailModal({
 
     try {
       addComment({
-        sessionId: session.id,
+        sessionId: currentSession.id,
         comment: newComment,
         commentType,
         isPrivate: false
@@ -112,13 +125,14 @@ export function SessionDetailModal({
   };
 
   const handleCompleteSession = async () => {
-    const result = await completeSession(session.id, {
+    const result = await completeSession(currentSession.id, {
       completionSummary,
       memberRating: memberRating || undefined,
       trainerRating: trainerRating || undefined
     });
     
-    if (!result.error) {
+    if (!result.error && result.data) {
+      setCurrentSession(result.data);
       onUpdate();
     }
   };
@@ -128,31 +142,27 @@ export function SessionDetailModal({
     
     switch (action) {
       case 'confirm':
-        result = await confirmSession(session.id);
+        result = await confirmSession(currentSession.id);
         break;
       case 'start':
-        result = await startSession(session.id);
+        result = await startSession(currentSession.id);
         break;
       case 'complete':
         await handleCompleteSession();
         return;
       case 'cancel':
-        result = await cancelSession(session.id);
+        result = await cancelSession(currentSession.id);
         break;
       case 'no_show':
-        result = await markNoShow(session.id);
+        result = await markNoShow(currentSession.id);
         break;
       case 'delete':
-        if (confirm('Are you sure you want to delete this session?')) {
-          result = await deleteSession(session.id);
-          if (!result.error) {
-            onClose();
-          }
-        }
+        setIsDeleteDialogOpen(true);
         return;
     }
 
-    if (result && !result.error) {
+    if (result && !result.error && result.data) {
+      setCurrentSession(result.data);
       onUpdate();
     }
   };
@@ -182,17 +192,17 @@ export function SessionDetailModal({
     }
   };
 
-  const sessionDuration = session.actualStartTime && session.actualEndTime
+  const sessionDuration = currentSession.actualStartTime && currentSession.actualEndTime
     ? intervalToDuration({
-        start: new Date(session.actualStartTime),
-        end: new Date(session.actualEndTime)
+        start: new Date(currentSession.actualStartTime),
+        end: new Date(currentSession.actualEndTime)
       })
     : null;
 
-  const isUpcoming = new Date(session.scheduledDate) > new Date();
-  const isCompleted = session.status === 'completed';
-  const canStart = session.status === 'confirmed' && !isUpcoming;
-  const canComplete = session.status === 'in_progress';
+  const isUpcoming = new Date(currentSession.scheduledDate) > new Date();
+  const isCompleted = currentSession.status === 'completed';
+  const canStart = currentSession.status === 'confirmed' && !isUpcoming;
+  const canComplete = currentSession.status === 'in_progress';
 
   return (
     <>
@@ -201,12 +211,12 @@ export function SessionDetailModal({
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span>{session.title}</span>
-                <Badge className={getStatusColor(session.status)}>
-                  {session.status.replace('_', ' ')}
+                <span>{currentSession.title}</span>
+                <Badge className={getStatusColor(currentSession.status)}>
+                  {currentSession.status.replace('_', ' ')}
                 </Badge>
-                <Badge className={getTypeColor(session.type)}>
-                  {session.type}
+                <Badge className={getTypeColor(currentSession.type)}>
+                  {currentSession.type}
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
@@ -250,7 +260,7 @@ export function SessionDetailModal({
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {session.status === 'scheduled' && (
+                    {currentSession.status === 'scheduled' && (
                       <Button
                         size="sm"
                         onClick={() => handleStatusChange('confirm')}
@@ -319,25 +329,25 @@ export function SessionDetailModal({
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Scheduled:</span>
-                      <span>{dateFormatters.longDateTime(session.scheduledDate)}</span>
+                      <span>{dateFormatters.longDateTime(currentSession.scheduledDate)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Duration:</span>
-                      <span>{session.duration} minutes</span>
+                      <span>{currentSession.duration} minutes</span>
                     </div>
-                    {session.actualStartTime && (
+                    {currentSession.actualStartTime && (
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Actual Start:</span>
-                        <span>{dateFormatters.longDateTime(session.actualStartTime)}</span>
+                        <span>{dateFormatters.longDateTime(currentSession.actualStartTime)}</span>
                       </div>
                     )}
-                    {session.actualEndTime && (
+                    {currentSession.actualEndTime && (
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Actual End:</span>
-                        <span>{dateFormatters.longDateTime(session.actualEndTime)}</span>
+                        <span>{dateFormatters.longDateTime(currentSession.actualEndTime)}</span>
                       </div>
                     )}
                     {sessionDuration && (
@@ -362,18 +372,18 @@ export function SessionDetailModal({
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Member:</span>
-                      <span>{session.member ? `${session.member.firstName} ${session.member.lastName}` : `Member ID: ${session.memberId}`}</span>
+                      <span>{currentSession.member ? `${currentSession.member.firstName} ${currentSession.member.lastName}` : `Member ID: ${currentSession.memberId}`}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Trainer:</span>
-                      <span>{session.trainer ? `${session.trainer.firstName} ${session.trainer.lastName}` : `Trainer ID: ${session.trainerId}`}</span>
+                      <span>{currentSession.trainer ? `${currentSession.trainer.firstName} ${currentSession.trainer.lastName}` : `Trainer ID: ${currentSession.trainerId}`}</span>
                     </div>
-                    {session.cost && (
+                    {currentSession.cost && (
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Cost:</span>
-                        <span>${session.cost}</span>
+                        <span>${currentSession.cost}</span>
                       </div>
                     )}
                   </CardContent>
@@ -388,18 +398,18 @@ export function SessionDetailModal({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {session.sessionRoom && (
+                    {currentSession.sessionRoom && (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Room:</span>
-                        <span>{session.sessionRoom}</span>
+                        <span>{currentSession.sessionRoom}</span>
                       </div>
                     )}
-                    {session.equipmentNeeded && session.equipmentNeeded.length > 0 && (
+                    {currentSession.equipmentNeeded && currentSession.equipmentNeeded.length > 0 && (
                       <div>
                         <span className="font-medium">Equipment:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {session.equipmentNeeded.map((equipment, index) => (
+                          {currentSession.equipmentNeeded.map((equipment, index) => (
                             <Badge key={index} variant="outline">
                               {equipment}
                             </Badge>
@@ -419,27 +429,27 @@ export function SessionDetailModal({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {session.sessionGoals && (
+                    {currentSession.sessionGoals && (
                       <div>
                         <span className="font-medium">Session Goals:</span>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {session.sessionGoals}
+                          {currentSession.sessionGoals}
                         </p>
                       </div>
                     )}
-                    {session.preparationNotes && (
+                    {currentSession.preparationNotes && (
                       <div>
                         <span className="font-medium">Preparation Notes:</span>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {session.preparationNotes}
+                          {currentSession.preparationNotes}
                         </p>
                       </div>
                     )}
-                    {session.description && (
+                    {currentSession.description && (
                       <div>
                         <span className="font-medium">Description:</span>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {session.description}
+                          {currentSession.description}
                         </p>
                       </div>
                     )}
@@ -448,7 +458,7 @@ export function SessionDetailModal({
               </div>
 
               {/* Ratings */}
-              {(session.memberRating || session.trainerRating) && (
+              {(currentSession.memberRating || currentSession.trainerRating) && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -457,7 +467,7 @@ export function SessionDetailModal({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-2 gap-4">
-                    {session.memberRating && (
+                    {currentSession.memberRating && (
                       <div>
                         <span className="font-medium">Member Rating:</span>
                         <div className="flex items-center gap-1 mt-1">
@@ -465,17 +475,17 @@ export function SessionDetailModal({
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < session.memberRating! 
+                                i < currentSession.memberRating! 
                                   ? 'fill-yellow-400 text-yellow-400' 
                                   : 'text-gray-300'
                               }`}
                             />
                           ))}
-                          <span className="ml-2 text-sm">({session.memberRating}/5)</span>
+                          <span className="ml-2 text-sm">({currentSession.memberRating}/5)</span>
                         </div>
                       </div>
                     )}
-                    {session.trainerRating && (
+                    {currentSession.trainerRating && (
                       <div>
                         <span className="font-medium">Trainer Rating:</span>
                         <div className="flex items-center gap-1 mt-1">
@@ -483,13 +493,13 @@ export function SessionDetailModal({
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < session.trainerRating! 
+                                i < currentSession.trainerRating! 
                                   ? 'fill-yellow-400 text-yellow-400' 
                                   : 'text-gray-300'
                               }`}
                             />
                           ))}
-                          <span className="ml-2 text-sm">({session.trainerRating}/5)</span>
+                          <span className="ml-2 text-sm">({currentSession.trainerRating}/5)</span>
                         </div>
                       </div>
                     )}
@@ -585,17 +595,17 @@ export function SessionDetailModal({
                     <CardTitle className="text-lg">Session Completion</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {session.completionSummary && (
+                    {currentSession.completionSummary && (
                       <div>
                         <span className="font-medium">Completion Summary:</span>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {session.completionSummary}
+                          {currentSession.completionSummary}
                         </p>
                       </div>
                     )}
                     
                     <div className="grid grid-cols-2 gap-4">
-                      {session.memberRating && (
+                      {currentSession.memberRating && (
                         <div>
                           <span className="font-medium">Member Rating:</span>
                           <div className="flex items-center gap-1 mt-1">
@@ -603,7 +613,7 @@ export function SessionDetailModal({
                               <Star
                                 key={i}
                                 className={`h-4 w-4 ${
-                                  i < session.memberRating! 
+                                  i < currentSession.memberRating! 
                                     ? 'fill-yellow-400 text-yellow-400' 
                                     : 'text-gray-300'
                                 }`}
@@ -614,7 +624,7 @@ export function SessionDetailModal({
                         </div>
                       )}
                       
-                      {session.trainerRating && (
+                      {currentSession.trainerRating && (
                         <div>
                           <span className="font-medium">Trainer Rating:</span>
                           <div className="flex items-center gap-1 mt-1">
@@ -622,7 +632,7 @@ export function SessionDetailModal({
                               <Star
                                 key={i}
                                 className={`h-4 w-4 ${
-                                  i < session.trainerRating! 
+                                  i < currentSession.trainerRating! 
                                     ? 'fill-yellow-400 text-yellow-400' 
                                     : 'text-gray-300'
                                 }`}
@@ -645,12 +655,45 @@ export function SessionDetailModal({
       <SessionModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onSuccess={() => {
+        onSuccess={(updatedSession) => {
+          if (updatedSession) {
+            setCurrentSession(updatedSession);
+          }
           setIsEditModalOpen(false);
           onUpdate();
         }}
-        session={session}
+        session={currentSession}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Session</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this session? This action cannot be undone and will permanently remove the session data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                const result = await deleteSession(currentSession.id);
+                if (!result.error) {
+                  setIsDeleteDialogOpen(false);
+                  onClose();
+                } else {
+                  // Keep dialog open on error so user can retry
+                }
+              }}
+              disabled={isActionLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isActionLoading ? 'Deleting...' : 'Delete Session'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

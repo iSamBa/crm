@@ -52,7 +52,6 @@ import {
 import { dateFormatters } from '@/lib/utils/date-formatting';
 import { Member } from '@/types';
 import { MemberForm } from '@/components/members/member-form';
-import { AdminLayout } from '@/components/layout/admin-layout';
 import { useMembers, useDeleteMembers } from '@/lib/hooks/use-members-modern';
 import { testMemberAccess } from '@/lib/debug/test-member-access';
 import { MemberDetailView } from '@/components/members/member-detail-view';
@@ -71,6 +70,7 @@ export default function MembersPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [errorDialog, setErrorDialog] = useState<{isOpen: boolean, title: string, message: string}>({isOpen: false, title: '', message: ''});
   const itemsPerPage = 10;
 
   // Use the modern TanStack Query hooks
@@ -130,11 +130,9 @@ export default function MembersPage() {
 
   if (isLoading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
@@ -196,12 +194,20 @@ export default function MembersPage() {
 
       if (!result.success) {
         console.error('Export failed:', result.error);
-        alert('Failed to export members: ' + (result.error || 'Unknown error'));
+        setErrorDialog({
+          isOpen: true,
+          title: 'Export Failed',
+          message: 'Failed to export members: ' + (result.error || 'Unknown error')
+        });
       }
       // Success is handled by the download trigger
     } catch (error) {
       console.error('Export error:', error);
-      alert('Failed to export members');
+      setErrorDialog({
+        isOpen: true,
+        title: 'Export Failed',
+        message: 'Failed to export members. Please try again.'
+      });
     } finally {
       setIsExporting(false);
     }
@@ -210,30 +216,27 @@ export default function MembersPage() {
   // If viewing member detail, show the detail view
   if (viewMode === 'detail' && selectedMemberId) {
     return (
-      <AdminLayout>
-        <div className="space-y-6">
-          {/* Back button */}
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={handleBackToList}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Members
-            </Button>
-          </div>
+      <div className="space-y-6">
+        {/* Back button */}
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={handleBackToList}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Members
+          </Button>
+        </div>
           
           {/* Member detail view */}
           <MemberDetailView 
             memberId={selectedMemberId} 
             onBack={handleBackToList}
           />
-        </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   // Otherwise show the list view
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -258,7 +261,7 @@ export default function MembersPage() {
                 Add Member
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="sm:max-w-7xl max-w-[95vw] w-[95vw] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Member</DialogTitle>
               </DialogHeader>
@@ -514,7 +517,7 @@ export default function MembersPage() {
 
       {editingMember && (
         <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="sm:max-w-7xl max-w-[95vw] w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Member</DialogTitle>
             </DialogHeader>
@@ -569,7 +572,21 @@ export default function MembersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      </div>
-    </AdminLayout>
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialog.isOpen} onOpenChange={() => setErrorDialog({isOpen: false, title: '', message: ''})}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{errorDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

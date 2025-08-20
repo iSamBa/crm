@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Home, ArrowLeft, Search, Users, UserCheck } from 'lucide-react';
+import { Home, Search, Users, UserCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
 
@@ -53,19 +53,10 @@ export default function RootNotFound() {
             The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Go Back
-            </Button>
-            
+          <div className="pt-4">
             <Button 
               onClick={() => router.push(getDashboardPath())}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full"
             >
               <DashboardIcon className="h-4 w-4" />
               {getDashboardLabel()}

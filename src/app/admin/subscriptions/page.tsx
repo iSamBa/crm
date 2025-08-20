@@ -20,6 +20,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -58,6 +68,7 @@ export default function SubscriptionsPage() {
   const [planFilter, setPlanFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionWithMember | null>(null);
+  const [actionDialog, setActionDialog] = useState<{isOpen: boolean, subscription: SubscriptionWithMember | null, action: 'cancel' | 'freeze' | 'reactivate' | null}>({isOpen: false, subscription: null, action: null});
   
   // Build filters object (memoized to prevent infinite re-renders)
   const filters: SubscriptionFilters = useMemo(() => ({
@@ -111,25 +122,35 @@ export default function SubscriptionsPage() {
   };
 
   const handleAction = async (subscription: SubscriptionWithMember, action: 'cancel' | 'freeze' | 'reactivate') => {
-    if (!confirm(`Are you sure you want to ${action} this subscription?`)) return;
+    setActionDialog({
+      isOpen: true,
+      subscription,
+      action
+    });
+  };
+
+  const confirmAction = async () => {
+    if (!actionDialog.subscription || !actionDialog.action) return;
 
     let result;
-    switch (action) {
+    switch (actionDialog.action) {
       case 'cancel':
-        result = await cancelSubscription(subscription.id);
+        result = await cancelSubscription(actionDialog.subscription.id);
         break;
       case 'freeze':
-        result = await freezeSubscription(subscription.id);
+        result = await freezeSubscription(actionDialog.subscription.id);
         break;
       case 'reactivate':
-        result = await reactivateSubscription(subscription.id);
+        result = await reactivateSubscription(actionDialog.subscription.id);
         break;
     }
 
     if (result.success) {
+      setActionDialog({isOpen: false, subscription: null, action: null});
       refetch();
     } else {
-      console.error(`Error ${action}ing subscription:`, result.error);
+      console.error(`Error ${actionDialog.action}ing subscription:`, result.error);
+      // Keep dialog open on error so user can retry
     }
   };
 
@@ -166,7 +187,7 @@ export default function SubscriptionsPage() {
                 New Subscription
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-7xl max-w-[95vw] w-[95vw] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Subscription</DialogTitle>
               </DialogHeader>
@@ -409,6 +430,40 @@ export default function SubscriptionsPage() {
             </DialogContent>
           </Dialog>
         )}
+
+        {/* Action Confirmation Dialog */}
+        <AlertDialog open={actionDialog.isOpen} onOpenChange={() => setActionDialog({isOpen: false, subscription: null, action: null})}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {actionDialog.action === 'cancel' ? 'Cancel Subscription' : 
+                 actionDialog.action === 'freeze' ? 'Freeze Subscription' : 
+                 'Reactivate Subscription'}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {actionDialog.action === 'cancel' 
+                  ? 'Are you sure you want to cancel this subscription? This action cannot be undone and the member will lose access.'
+                  : actionDialog.action === 'freeze'
+                  ? 'Are you sure you want to freeze this subscription? The member will temporarily lose access.'
+                  : 'Are you sure you want to reactivate this subscription? The member will regain access.'
+                }
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmAction}
+                disabled={actionLoading}
+                className={actionDialog.action === 'cancel' ? 'bg-red-600 hover:bg-red-700' : ''}
+              >
+                {actionLoading ? 'Processing...' : 
+                 actionDialog.action === 'cancel' ? 'Cancel Subscription' :
+                 actionDialog.action === 'freeze' ? 'Freeze Subscription' :
+                 'Reactivate Subscription'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
