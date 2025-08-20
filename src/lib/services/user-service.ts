@@ -95,8 +95,28 @@ class UserService extends BaseService {
 
     return this.executeMutation(
       async () => {
-        const dbData = this.transformToDbFields(validation.data!, this.fieldMap);
-        dbData.updated_at = new Date().toISOString();
+        // Manual field transformation to ensure correct mapping
+        const dbData: any = {
+          updated_at: new Date().toISOString()
+        };
+        
+        if (validation.data!.firstName !== undefined) {
+          dbData.first_name = validation.data!.firstName;
+        }
+        if (validation.data!.lastName !== undefined) {
+          dbData.last_name = validation.data!.lastName;
+        }
+        if (validation.data!.email !== undefined) {
+          dbData.email = validation.data!.email;
+        }
+        if (validation.data!.phone !== undefined) {
+          dbData.phone = validation.data!.phone;
+        }
+        if (validation.data!.avatar !== undefined) {
+          dbData.avatar = validation.data!.avatar;
+        }
+        
+        console.log('Updating user with data:', dbData);
         
         return this.db
           .from(this.tableName)
@@ -108,7 +128,12 @@ class UserService extends BaseService {
       'Failed to update user profile',
       {
         logOperation: `Updating profile for user: ${userId}`,
-        transform: (data: any) => this.transformUserData(data)
+        transform: (data: any) => this.transformUserData(data),
+        invalidateQueries: [
+          () => this.cache.invalidateQueries({ queryKey: ['user', userId] }),
+          () => this.cache.invalidateQueries({ queryKey: ['users'] }),
+          () => this.cache.invalidateQueries({ queryKey: ['auth-user'] })
+        ]
       }
     );
   }

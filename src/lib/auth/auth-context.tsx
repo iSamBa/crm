@@ -12,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   hasRole: (role: User['role']) => boolean;
   isAdmin: boolean;
   isTrainer: boolean;
@@ -147,6 +148,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const refreshUser = async () => {
+    if (supabaseUser) {
+      const userProfile = await fetchUserProfile(supabaseUser);
+      setUser(userProfile);
+    }
+  };
+
   const hasRole = (role: User['role']) => {
     return user?.role === role;
   };
@@ -160,6 +168,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading,
     signIn,
     signOut,
+    refreshUser,
     hasRole,
     isAdmin,
     isTrainer,

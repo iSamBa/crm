@@ -19,6 +19,7 @@ import {
 import { User } from '@/types';
 import { UpdateUserProfileSchema, type UpdateUserProfileData } from '@/lib/schemas';
 import { userService } from '@/lib/services/user-service';
+import { useAuth } from '@/lib/auth/auth-context';
 import { Loader2, Save, Upload } from 'lucide-react';
 
 interface ProfileInfoFormProps {
@@ -29,6 +30,7 @@ export function ProfileInfoForm({ user }: ProfileInfoFormProps) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { refreshUser } = useAuth();
 
   const {
     register,
@@ -54,9 +56,13 @@ export function ProfileInfoForm({ user }: ProfileInfoFormProps) {
       }
       return response.data;
     },
-    onSuccess: (updatedUser) => {
-      // Update the query cache
+    onSuccess: async (updatedUser) => {
+      // Update all relevant query caches
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['user', user.id] });
+      
+      // Refresh auth context to update sidebar immediately
+      await refreshUser();
       
       // Reset form with updated values
       reset({
