@@ -61,7 +61,7 @@
   --accent-foreground: oklch(0.2 0 0);
   --destructive: oklch(0.4 0 0);
   --border: oklch(0.88 0 0);
-  --input: oklch(0.96 0 0);
+  --input: oklch(0.92 0 0);
   --ring: oklch(0.3 0 0);
   --chart-1: oklch(0.2 0 0);   /* Active - Darkest */
   --chart-2: oklch(0.4 0 0);   /* Inactive - Dark gray */
@@ -95,7 +95,7 @@
   --accent-foreground: oklch(0.9 0 0);
   --destructive: oklch(0.7 0 0);
   --border: oklch(0.25 0 0);
-  --input: oklch(0.15 0 0);
+  --input: oklch(0.25 0 0);
   --ring: oklch(0.6 0 0);
   --chart-1: oklch(0.9 0 0);   /* Active - Lightest (inverted) */
   --chart-2: oklch(0.75 0 0);  /* Inactive - Light gray */
@@ -191,5 +191,36 @@
   .dark .hover\:bg-muted\/50:hover input[type="checkbox"] {
     border-color: oklch(0.4 0 0) !important;
     background-color: oklch(0.2 0 0) !important;
+  }
+  
+  /* Force input background colors with high specificity */
+  input[data-slot="input"],
+  input[type="text"],
+  input[type="email"], 
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  textarea,
+  .bg-transparent[data-slot="input"],
+  .bg-background[data-slot="input"] {
+    background-color: var(--input) !important;
+  }
+  
+  /* Ensure select components also get proper background */
+  [data-slot="select-trigger"],
+  .bg-transparent[data-slot="select-trigger"],
+  .bg-background[data-slot="select-trigger"] {
+    background-color: var(--input) !important;
+  }
+  
+  /* Override any utility classes that might interfere */
+  input.bg-transparent:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+  textarea.bg-transparent {
+    background-color: var(--input) !important;
   }
 }

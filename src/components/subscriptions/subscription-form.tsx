@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useMembershipPlans, useSubscriptionActions } from '@/lib/hooks/use-subscriptions';
@@ -299,7 +300,11 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
                     <FormItem>
                       <FormLabel>Start Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <DatePicker
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select start date"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

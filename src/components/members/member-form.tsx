@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -205,10 +206,10 @@ export function MemberForm({ member, onSuccess }: MemberFormProps) {
         </div>
         <div>
           <Label htmlFor="joinDate">Join Date *</Label>
-          <Input
-            id="joinDate"
-            type="date"
-            {...register('joinDate')}
+          <DatePicker
+            value={watch('joinDate')}
+            onChange={(value) => setValue('joinDate', value)}
+            placeholder="Select join date"
           />
           {errors.joinDate && (
             <p className="text-sm text-red-600 mt-1">{errors.joinDate.message}</p>
