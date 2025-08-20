@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { memberService } from '@/lib/services/member-service';
 import { subscriptionService } from '@/lib/services/subscription-service';
 import { sessionService } from '@/lib/services/session-service';
@@ -17,20 +17,14 @@ export interface DashboardStats {
 }
 
 export function useDashboardStats() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalMembers: 0,
-    monthlyRevenue: 0,
-    activeSubscriptions: 0,
-    dailyCheckins: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStats = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
+  const {
+    data: stats,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['dashboard', 'stats'],
+    queryFn: async (): Promise<DashboardStats> => {
       // Fetch all stats in parallel
       const [memberStatsResult, subscriptionStatsResult, todaySessionsResult] = await Promise.all([
         memberService.getMemberStats(),
@@ -72,7 +66,7 @@ export function useDashboardStats() {
       // Revenue growth (mock calculation - would need historical data)
       const revenueGrowth = 12;
 
-      const dashboardStats: DashboardStats = {
+      return {
         totalMembers: memberStats?.totalMembers || 0,
         monthlyRevenue,
         activeSubscriptions: subscriptionStats?.activeSubscriptions || 0,
@@ -81,46 +75,39 @@ export function useDashboardStats() {
         memberGrowth,
         subscriptionGrowth,
       };
-
-      setStats(dashboardStats);
-    } catch (err) {
-      console.error('Error fetching dashboard stats:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch dashboard stats');
-    } finally {
-      setIsLoading(false);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    meta: {
+      errorMessage: 'Failed to load dashboard statistics'
     }
-  }, []);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  });
 
   return {
-    stats,
+    stats: stats || {
+      totalMembers: 0,
+      monthlyRevenue: 0,
+      activeSubscriptions: 0,
+      dailyCheckins: 0,
+    },
     isLoading,
-    error,
-    refetch: fetchStats,
+    error: error?.message || null,
+    refetch,
   };
 }
 
 // Hook for recent activities across all services
 export function useRecentActivities(limit = 10) {
-  const [activities, setActivities] = useState<Array<{
-    type: string;
-    title: string;
-    description: string;
-    time: string;
-    timestamp: string;
-    [key: string]: unknown;
-  }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchActivities = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
+  const {
+    data: activities,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['dashboard', 'activities', limit],
+    queryFn: async () => {
       // Get recent member activities
       const { data: memberActivities, error: memberError } = await memberService.getRecentMemberActivities(limit);
       
@@ -160,23 +147,21 @@ export function useRecentActivities(limit = 10) {
       ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
        .slice(0, limit);
 
-      setActivities(allActivities);
-    } catch (err) {
-      console.error('Error fetching recent activities:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch activities');
-    } finally {
-      setIsLoading(false);
+      return allActivities;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes for activities
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    meta: {
+      errorMessage: 'Failed to load recent activities'
     }
-  }, [limit]);
-
-  useEffect(() => {
-    fetchActivities();
-  }, [fetchActivities]);
+  });
 
   return {
-    activities,
+    activities: activities || [],
     isLoading,
-    error,
-    refetch: fetchActivities,
+    error: error?.message || null,
+    refetch,
   };
 }

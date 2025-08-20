@@ -116,15 +116,15 @@ export default function MembersPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900';
       case 'frozen':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gray-600 text-white dark:bg-gray-400 dark:text-gray-900';
       case 'inactive':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-400 text-white dark:bg-gray-600 dark:text-white';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
   };
 

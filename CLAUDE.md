@@ -209,19 +209,27 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-### 🎨 UI Theme and Colors
+### 🎨 UI Theme and Colors - Mono Theme Implementation ✅
 
-The application uses a warm, energetic fitness-themed color palette:
+The application uses a **professional monochrome theme** with **Geist Mono** typography:
 
-**Primary Colors** (defined in `src/app/globals.css`):
-- **Primary**: `oklch(0.65 0.22 28)` - Warm orange, used for main actions and active states
-- **Accent**: `oklch(0.72 0.15 45)` - Lighter orange, for secondary elements
-- **Secondary**: Standard grays for supporting elements
+**Monochrome Color Palette** (defined in `src/app/globals.css`):
+- **Primary**: `oklch(0.2 0 0)` - Dark charcoal for primary elements in light mode
+- **Background**: `oklch(0.98 0 0)` (light) / `oklch(0.08 0 0)` (dark)
+- **Foreground**: `oklch(0.15 0 0)` (light) / `oklch(0.95 0 0)` (dark)
+- **Chart Colors**: Graduated grayscale palette from dark to light for data visualization
 
-**Color Usage Guidelines**:
-- Primary orange for active navigation, buttons, and key interactive elements
-- White text (`primary-foreground`) for contrast against primary backgrounds
-- Consistent hover states: `hover:bg-primary hover:text-primary-foreground`
+**Theme Features**:
+- **Light/Dark Mode Toggle**: Seamless switching with localStorage persistence
+- **Monospace Typography**: Geist_Mono for consistent, professional appearance
+- **Accessible Contrast**: Carefully balanced grayscale colors for optimal readability
+- **Consistent Theming**: All components, charts, and status indicators use the monochrome palette
+
+**Theme Implementation**:
+- **Theme Context**: `src/lib/theme/theme-context.tsx` - System preference detection and persistence
+- **Theme Toggle**: `src/components/ui/theme-toggle.tsx` - Sun/moon icon toggle button
+- **Color Variables**: All colors defined using OKLCH color space for modern color consistency
+- **Chart Colors**: Dynamic theme-aware colors in member distribution charts and status breakdowns
 
 ## ✅ Comprehensive Modernization Complete
 
@@ -278,6 +286,16 @@ The application uses a warm, energetic fitness-themed color palette:
 - Form validation with Zod schemas and error handling
 - Proper database field mapping and hydration handling
 - Professional UI with card-based layout and responsive design
+
+**✅ Monochrome Theme System - COMPLETE**
+- Professional monochrome design with Geist_Mono typography
+- Light/dark mode toggle with system preference detection and localStorage persistence
+- OKLCH color space implementation for modern, consistent color definitions
+- Theme-aware component styling throughout the application
+- Monochromatic chart colors with proper contrast and accessibility
+- Dynamic status color system that adapts to light/dark themes
+- Comprehensive theme context with React Context API
+- Optimized color visibility for data visualization and status indicators
 
 ## 🚨 Critical Implementation Rules
 

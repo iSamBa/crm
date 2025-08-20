@@ -20,4 +20,8 @@
 
 ## Trainers
 
-- [] Sessions and availability are not implemented
+- [x] Sessions and availability are not implemented
+
+## Login
+
+- [] When no admin is in the database show a first onboarding page, where an admin user need to be created

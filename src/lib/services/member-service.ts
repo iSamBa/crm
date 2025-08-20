@@ -308,12 +308,22 @@ class MemberService extends BaseService {
       return { data: [], error: null };
     }
 
-    // Define colors that match the dashboard theme
-    const statusColors = {
-      active: '#cb8589', // Dusty rose
-      frozen: '#d7b29d', // Warm beige
-      inactive: '#e8d2ae', // Light cream  
-      cancelled: '#DDE8B9', // Soft green
+    // Define monochrome colors that adapt to light/dark theme
+    const isDarkMode = typeof document !== 'undefined' && 
+      document.documentElement.classList.contains('dark');
+
+    const statusColors = isDarkMode ? {
+      // Dark mode: lighter colors on dark background
+      active: 'rgb(230 230 230)',    // ~oklch(0.9 0 0) - Lightest for active
+      inactive: 'rgb(191 191 191)',  // ~oklch(0.75 0 0) - Light gray for inactive  
+      frozen: 'rgb(153 153 153)',    // ~oklch(0.6 0 0) - Medium gray for frozen
+      cancelled: 'rgb(115 115 115)', // ~oklch(0.45 0 0) - Dark gray for cancelled
+    } : {
+      // Light mode: darker colors on light background - improved visibility
+      active: 'rgb(102 102 102)',    // ~oklch(0.4 0 0) - Dark gray for active (more visible)
+      inactive: 'rgb(153 153 153)',  // ~oklch(0.6 0 0) - Medium gray for inactive
+      frozen: 'rgb(191 191 191)',    // ~oklch(0.75 0 0) - Light gray for frozen  
+      cancelled: 'rgb(230 230 230)', // ~oklch(0.9 0 0) - Lightest gray for cancelled
     };
 
     const distribution: MemberDistribution[] = [

@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useTheme } from '@/lib/theme/theme-context';
 import { 
   Users, 
   CreditCard, 
@@ -24,7 +25,9 @@ import {
   TrendingUp,
   Home,
   User,
-  Package
+  Package,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -41,6 +44,7 @@ interface SidebarProps {
 export function Sidebar({ items, role }: SidebarProps) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const roleConfig = {
     admin: {
@@ -111,6 +115,14 @@ export function Sidebar({ items, role }: SidebarProps) {
                 <User className="h-4 w-4" />
                 Profile
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={toggleTheme} className="flex items-center gap-2">
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={signOut} className="flex items-center gap-2 text-destructive">
               <LogOut className="h-4 w-4" />

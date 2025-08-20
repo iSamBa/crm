@@ -258,9 +258,6 @@ class TrainerService extends BaseService {
 
           return { data: trainers, error: null };
         }
-
-        if (error) throw error;
-        return { data: data || [], error: null };
       },
       'Failed to fetch trainers',
       {
