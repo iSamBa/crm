@@ -25,14 +25,14 @@ export default function RootNotFound() {
           
           <div className="pt-4 space-y-3">
             <Button asChild className="flex items-center gap-2 w-full">
-              <Link href={ROUTES.ADMIN.DASHBOARD}>
+              <Link href={ROUTES.LOGIN}>
                 <Home className="h-4 w-4" />
-                Go to Dashboard
+                Go to Login
               </Link>
             </Button>
             
             <p className="text-xs text-muted-foreground">
-              Don't have access? <Link href={ROUTES.LOGIN} className="underline hover:text-primary">Sign in here</Link>
+              This will redirect you to the appropriate dashboard after login
             </p>
           </div>
 
