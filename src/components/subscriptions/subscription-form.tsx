@@ -29,7 +29,7 @@ import { useMembershipPlans, useSubscriptionActions } from '@/lib/hooks/use-subs
 import { useMembers } from '@/lib/hooks/use-members';
 import { subscriptionService, SubscriptionWithMember } from '@/lib/services/subscription-service';
 import { Check, User } from 'lucide-react';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { shortDate } from '@/lib/utils/date-formatting';
 
 const subscriptionSchema = z.object({
   memberId: z.string().min(1, 'Please select a member'),
@@ -423,7 +423,7 @@ export function SubscriptionForm({ memberId, subscription, onSuccess }: Subscrip
                         <span className="text-gray-600">Start Date:</span>
                         <span className="font-medium">
                           {form.watch('startDate') ? 
-                            dateFormatters.shortDate(form.watch('startDate')) : 
+                            shortDate(form.watch('startDate')) : 
                             'Not set'
                           }
                         </span>
@@ -432,7 +432,7 @@ export function SubscriptionForm({ memberId, subscription, onSuccess }: Subscrip
                         <div className="flex justify-between py-2 border-b border-gray-100">
                           <span className="text-gray-600">End Date:</span>
                           <span className="font-medium">
-                            {dateFormatters.shortDate(
+                            {shortDate(
                               subscriptionService.calculateEndDate(
                                 form.watch('startDate'), 
                                 selectedPlan.duration

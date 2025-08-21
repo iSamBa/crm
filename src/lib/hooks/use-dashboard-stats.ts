@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { memberService } from '@/lib/services/member-service';
 import { subscriptionService } from '@/lib/services/subscription-service';
 import { sessionService } from '@/lib/services/session-service';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { shortDateTime } from '@/lib/utils/date-formatting';
 
 export interface DashboardStats {
   totalMembers: number;
@@ -128,7 +128,7 @@ export function useRecentActivities(limit = 10) {
         type: 'session_scheduled',
         title: 'Training session created',
         description: `${session.title} with ${session.member?.firstName || 'Member'} ${session.member?.lastName || ''}`.trim(),
-        time: dateFormatters.shortDateTime(session.createdAt || session.scheduledDate),
+        time: shortDateTime(session.createdAt || session.scheduledDate),
         sessionTitle: session.title,
         memberName: session.member ? `${session.member.firstName} ${session.member.lastName}` : 'Unknown Member',
         trainerName: session.trainer ? `${session.trainer.firstName} ${session.trainer.lastName}` : 'Unknown Trainer',

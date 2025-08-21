@@ -15,7 +15,7 @@ import {
   Target,
   Edit
 } from 'lucide-react';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { shortDate } from '@/lib/utils/date-formatting';
 import { TrainerSessionsList } from './trainer-sessions-list';
 import { useTrainer } from '@/lib/hooks/use-trainers-modern';
 import { useTrainerStats } from '@/lib/hooks/use-trainer-stats';
@@ -79,7 +79,7 @@ export function TrainerDetailView({ trainerId, onBack, onEdit }: TrainerDetailVi
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="secondary">Trainer</Badge>
                   <span className="text-sm text-muted-foreground">
-                    Member since {dateFormatters.shortDate(trainer.createdAt)}
+                    Member since {shortDate(trainer.createdAt)}
                   </span>
                 </div>
               </div>

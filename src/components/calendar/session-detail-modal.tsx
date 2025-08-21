@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { formatDuration, intervalToDuration } from 'date-fns';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { longDateTime } from '@/lib/utils/date-formatting';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -233,6 +234,9 @@ export function SessionDetailModal({
                 </Button>
               </div>
             </DialogTitle>
+            <DialogDescription>
+              View and manage session details, including participant information, timing, and session notes.
+            </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="details" className="space-y-4">
@@ -323,7 +327,7 @@ export function SessionDetailModal({
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Scheduled:</span>
-                      <span>{dateFormatters.longDateTime(currentSession.scheduledDate)}</span>
+                      <span>{longDateTime(currentSession.scheduledDate)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
@@ -334,14 +338,14 @@ export function SessionDetailModal({
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Actual Start:</span>
-                        <span>{dateFormatters.longDateTime(currentSession.actualStartTime)}</span>
+                        <span>{longDateTime(currentSession.actualStartTime)}</span>
                       </div>
                     )}
                     {currentSession.actualEndTime && (
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Actual End:</span>
-                        <span>{dateFormatters.longDateTime(currentSession.actualEndTime)}</span>
+                        <span>{longDateTime(currentSession.actualEndTime)}</span>
                       </div>
                     )}
                     {sessionDuration && (
@@ -566,7 +570,7 @@ export function SessionDetailModal({
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline">{comment.commentType}</Badge>
                               <span className="text-sm text-muted-foreground">
-                                {dateFormatters.longDateTime(comment.createdAt)}
+                                {longDateTime(comment.createdAt)}
                               </span>
                               {comment.isPrivate && (
                                 <Badge variant="secondary">Private</Badge>

@@ -50,7 +50,7 @@ import {
   Users
 } from 'lucide-react';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { shortDate } from '@/lib/utils/date-formatting';
 import { SubscriptionStatsCards } from '@/components/subscriptions/subscription-stats-cards';
 import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
 import { useAllSubscriptions, useSubscriptionActions, useMembershipPlans } from '@/lib/hooks/use-subscriptions';
@@ -355,7 +355,7 @@ export default function SubscriptionsPage() {
                         {formatCurrency(parseFloat(subscription.price.toString()))}
                       </TableCell>
                       <TableCell>
-                        {dateFormatters.shortDate(subscription.startDate)}
+                        {shortDate(subscription.startDate)}
                       </TableCell>
                       <TableCell>
                         <div className={
@@ -363,7 +363,7 @@ export default function SubscriptionsPage() {
                             ? 'text-orange-600 font-medium'
                             : ''
                         }>
-                          {dateFormatters.shortDate(subscription.endDate)}
+                          {shortDate(subscription.endDate)}
                         </div>
                       </TableCell>
                       <TableCell>

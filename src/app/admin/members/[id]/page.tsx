@@ -37,7 +37,7 @@ import { SubscriptionList } from '@/components/subscriptions/subscription-list';
 import { MemberSessionsList } from '@/components/members/member-sessions-list';
 import Link from 'next/link';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { dateFormatters, dateUtils } from '@/lib/utils/date-formatting';
+import { shortDate, dateUtils } from '@/lib/utils/date-formatting';
 
 export default function MemberDetailPage() {
   const params = useParams();
@@ -175,7 +175,7 @@ export default function MemberDetailPage() {
                 
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>Joined {dateFormatters.shortDate(member.joinDate)}</span>
+                  <span>Joined {shortDate(member.joinDate)}</span>
                 </div>
               </div>
 

@@ -25,7 +25,7 @@ import { TrainingSession } from '@/types';
 import type { EventClickArg, DateSelectArg, EventContentArg } from '@fullcalendar/core';
 import { SessionModal } from './session-modal';
 import { SessionDetailModal } from './session-detail-modal';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { shortTime, calendarHeader } from '@/lib/utils/date-formatting';
 import { calculateSessionEndTime } from '@/lib/utils/session-utils';
 import './session-calendar.css';
 
@@ -159,8 +159,8 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
     const { session, memberName, trainerName } = eventInfo.event.extendedProps;
     
     // Format start and end times
-    const startTime = dateFormatters.shortTime(eventInfo.event.start);
-    const endTime = dateFormatters.shortTime(eventInfo.event.end);
+    const startTime = shortTime(eventInfo.event.start);
+    const endTime = shortTime(eventInfo.event.end);
     
     return (
       <div className="p-1 flex flex-col gap-0.5 h-full justify-start">
@@ -248,7 +248,7 @@ export function SessionCalendar({ className }: SessionCalendarProps) {
             
             {/* Current date display */}
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              {dateFormatters.calendarHeader(currentDate)}
+              {calendarHeader(currentDate)}
             </span>
           </div>
           

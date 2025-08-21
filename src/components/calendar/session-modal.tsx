@@ -138,7 +138,7 @@ export function SessionModal({
       description: session?.description || '',
       scheduledDate: formatDateTimeLocal(session?.scheduledDate) || (defaultDate?.toISOString().slice(0, 16)) || '',
       duration: session?.duration || defaultDuration,
-      cost: session?.cost || 0,
+      cost: session?.cost ?? undefined,
       sessionRoom: session?.sessionRoom || '',
       equipmentNeeded: session?.equipmentNeeded?.join(', ') || '',
       sessionGoals: session?.sessionGoals || '',
@@ -160,7 +160,7 @@ export function SessionModal({
         description: session.description || '',
         scheduledDate: formatDateTimeLocal(session.scheduledDate) || '',
         duration: session.duration || defaultDuration,
-        cost: session.cost || 0,
+        cost: session.cost ?? undefined,
         sessionRoom: session.sessionRoom || '',
         equipmentNeeded: session.equipmentNeeded?.join(', ') || '',
         sessionGoals: session.sessionGoals || '',
@@ -176,7 +176,7 @@ export function SessionModal({
         description: '',
         scheduledDate: defaultDate?.toISOString().slice(0, 16) || '',
         duration: defaultDuration,
-        cost: 0,
+        cost: undefined,
         sessionRoom: '',
         equipmentNeeded: '',
         sessionGoals: '',
@@ -439,7 +439,16 @@ export function SessionModal({
                               step="0.01"
                               placeholder="0.00"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              value={field.value ?? ''}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = parseFloat(value);
+                                  field.onChange(isNaN(numValue) ? undefined : numValue);
+                                }
+                              }}
                             />
                           </FormControl>
                           <FormMessage />

@@ -49,7 +49,7 @@ import {
   ChevronRight,
   ArrowLeft
 } from 'lucide-react';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { shortDate } from '@/lib/utils/date-formatting';
 import { Member } from '@/types';
 import { MemberForm } from '@/components/members/member-form';
 import { useMembers, useDeleteMembers } from '@/lib/hooks/use-members-modern';
@@ -432,7 +432,7 @@ export default function MembersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {dateFormatters.shortDate(member.joinDate)}
+                      {shortDate(member.joinDate)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">

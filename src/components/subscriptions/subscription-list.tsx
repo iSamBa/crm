@@ -31,7 +31,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useMemberSubscriptionsModern, useSubscriptionActions } from '@/lib/hooks/use-subscriptions';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { shortDate } from '@/lib/utils/date-formatting';
 import { Subscription } from '@/lib/services/subscription-service';
 
 interface SubscriptionListProps {
@@ -170,10 +170,10 @@ export function SubscriptionList({ memberId }: SubscriptionListProps) {
                   </TableCell>
                   <TableCell>${subscription.price}</TableCell>
                   <TableCell>
-                    {dateFormatters.shortDate(subscription.startDate)}
+                    {shortDate(subscription.startDate)}
                   </TableCell>
                   <TableCell>
-                    {dateFormatters.shortDate(subscription.endDate)}
+                    {shortDate(subscription.endDate)}
                   </TableCell>
                   <TableCell>
                     <Badge variant={subscription.autoRenew ? 'default' : 'outline'}>

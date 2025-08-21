@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { TrainingSession } from '@/types';
 import { sessionService } from '@/lib/services/session-service';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { fullDateTime } from '@/lib/utils/date-formatting';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-client';
 import { SessionModal } from '@/components/calendar/session-modal';
@@ -287,7 +287,7 @@ export function SessionsList({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{dateFormatters.fullDateTime(session.scheduledDate)}</span>
+                        <span>{fullDateTime(session.scheduledDate)}</span>
                       </div>
 
                       <div className="flex items-center gap-2 text-sm">
@@ -428,7 +428,7 @@ export function SessionsList({
                   <br /><br />
                   <strong>Session:</strong> {sessionToDelete.title}
                   <br />
-                  <strong>Date:</strong> {dateFormatters.fullDateTime(sessionToDelete.scheduledDate)}
+                  <strong>Date:</strong> {fullDateTime(sessionToDelete.scheduledDate)}
                 </>
               )}
             </AlertDialogDescription>

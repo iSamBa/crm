@@ -16,7 +16,7 @@ import {
   type UpdateMemberData,
   type MemberFilters
 } from '@/lib/schemas';
-import { dateFormatters } from '@/lib/utils/date-formatting';
+import { shortDateTime } from '@/lib/utils/date-formatting';
 import { queryKeys } from '@/lib/query-client';
 
 // Types exported from schemas - no need to duplicate
@@ -382,7 +382,7 @@ class MemberService extends BaseService {
           type: 'member_joined',
           title: 'New member registration',
           description: `${member.first_name} ${member.last_name} joined`,
-          time: dateFormatters.shortDateTime(member.created_at),
+          time: shortDateTime(member.created_at),
           memberName: `${member.first_name} ${member.last_name}`,
           status: member.membership_status,
           timestamp: member.created_at,
