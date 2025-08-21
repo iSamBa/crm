@@ -30,7 +30,7 @@ import {
   DollarSign,
   RefreshCw
 } from 'lucide-react';
-import { useMemberSubscriptions, useSubscriptionActions } from '@/lib/hooks/use-subscriptions';
+import { useMemberSubscriptionsModern, useSubscriptionActions } from '@/lib/hooks/use-subscriptions';
 import { dateFormatters } from '@/lib/utils/date-formatting';
 import { Subscription } from '@/lib/services/subscription-service';
 
@@ -39,7 +39,7 @@ interface SubscriptionListProps {
 }
 
 export function SubscriptionList({ memberId }: SubscriptionListProps) {
-  const { subscriptions, isLoading, refetch } = useMemberSubscriptions(memberId);
+  const { data: subscriptions = [], isLoading, refetch } = useMemberSubscriptionsModern(memberId);
   const { 
     cancelSubscription, 
     freezeSubscription, 

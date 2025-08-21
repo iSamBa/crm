@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-client';
 import { 
   subscriptionService, 
   Subscription, 
@@ -74,6 +76,19 @@ export function useMemberSubscriptions(memberId: string) {
     error,
     refetch: fetchSubscriptions
   };
+}
+
+// Modern TanStack Query version for better caching and real-time updates
+export function useMemberSubscriptionsModern(memberId: string) {
+  return useQuery({
+    queryKey: queryKeys.subscriptions.member(memberId),
+    queryFn: () => subscriptionService.getMemberSubscriptions(memberId),
+    select: (data) => data.data || [],
+    enabled: !!memberId,
+    meta: { errorMessage: 'Failed to load member subscriptions' },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000,    // 5 minutes
+  });
 }
 
 export function useSubscriptionActions() {

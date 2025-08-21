@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useMember } from '@/lib/hooks/use-members-modern';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-client';
 import { MemberHeader } from './member-header';
 import { MemberInfoCard } from './member-info-card';
 import { EmergencyContactCard } from './emergency-contact-card';
@@ -16,6 +18,7 @@ interface MemberDetailViewProps {
 export function MemberDetailView({ memberId, onBack }: MemberDetailViewProps) {
   const { data: member, isLoading, error } = useMember(memberId);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleMemberUpdated = () => {
     setIsEditDialogOpen(false);
@@ -23,7 +26,14 @@ export function MemberDetailView({ memberId, onBack }: MemberDetailViewProps) {
   };
 
   const handleSubscriptionUpdated = () => {
-    // TanStack Query will automatically refetch and update cache
+    // Invalidate member subscriptions cache to show new subscription immediately
+    queryClient.invalidateQueries({ 
+      queryKey: queryKeys.subscriptions.member(memberId) 
+    });
+    // Also invalidate general subscription lists and stats
+    queryClient.invalidateQueries({ 
+      queryKey: queryKeys.subscriptions.all 
+    });
   };
 
   // Go back if member not found or error
