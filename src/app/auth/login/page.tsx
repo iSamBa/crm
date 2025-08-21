@@ -27,10 +27,12 @@ export default function LoginPage() {
 
     if (result.error) {
       setError(result.error);
-      setIsLoading(false);
     } else {
+      // Successful login - redirect will be handled by auth context
       router.push('/');
     }
+    
+    setIsLoading(false);
   };
 
   return (
