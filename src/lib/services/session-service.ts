@@ -396,7 +396,7 @@ class SessionService {
   }
 
   // Helper methods
-  private async createRecurringSessions(_parentSessionId: string, _data: CreateSessionData): Promise<void> {
+  private async createRecurringSessions(): Promise<void> {
     // Implementation for creating recurring sessions
     // This would create multiple sessions based on the recurring pattern
     // TODO: Implement recurring session logic

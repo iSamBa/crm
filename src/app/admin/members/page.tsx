@@ -53,7 +53,6 @@ import { dateFormatters } from '@/lib/utils/date-formatting';
 import { Member } from '@/types';
 import { MemberForm } from '@/components/members/member-form';
 import { useMembers, useDeleteMembers } from '@/lib/hooks/use-members-modern';
-import { testMemberAccess } from '@/lib/debug/test-member-access';
 import { MemberDetailView } from '@/components/members/member-detail-view';
 import { MemberDistributionChart } from '@/components/charts/member-distribution-chart';
 import { memberService } from '@/lib/services/member-service';

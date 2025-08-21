@@ -103,7 +103,7 @@ export function ProfilePreferencesForm({ userId }: ProfilePreferencesFormProps) 
         smsNotifications: preferences.sms_notifications ?? false,
         sessionReminders: preferences.session_reminders ?? true,
         marketingEmails: preferences.marketing_emails ?? false,
-        theme: preferences.theme ?? 'light',
+        theme: (preferences.theme as 'light' | 'dark') ?? 'light',
         language: preferences.language ?? 'en',
         timezone: preferences.timezone ?? 'America/New_York'
       });
