@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { DollarSign, TrendingUp, Clock, FileText, Camera, Activity, Plus } from 'lucide-react';
 import { Member } from '@/types';
 import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
@@ -63,6 +63,9 @@ export function MemberTabs({ member, onSubscriptionUpdated }: MemberTabsProps) {
             <DialogContent className="w-[50vw] max-w-[50vw] min-w-[1200px] h-[95vh] overflow-y-auto p-6" style={{ width: '50vw', maxWidth: '50vw' }}>
               <DialogHeader>
                 <DialogTitle>Add New Subscription</DialogTitle>
+                <DialogDescription>
+                  Create a new subscription plan for {member.firstName} {member.lastName}
+                </DialogDescription>
               </DialogHeader>
               <SubscriptionForm 
                 memberId={member.id} 
