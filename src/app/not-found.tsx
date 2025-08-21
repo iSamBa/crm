@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Search } from 'lucide-react';
 import Link from 'next/link';
 import { appConfig } from '@/lib/utils/app-config';
+import { ROUTES } from '@/constants';
 
 export default function RootNotFound() {
 
@@ -24,11 +25,15 @@ export default function RootNotFound() {
           
           <div className="pt-4 space-y-3">
             <Button asChild className="flex items-center gap-2 w-full">
-              <Link href="/">
+              <Link href={ROUTES.ADMIN.DASHBOARD}>
                 <Home className="h-4 w-4" />
-                Back to Home
+                Go to Dashboard
               </Link>
             </Button>
+            
+            <p className="text-xs text-muted-foreground">
+              Don't have access? <Link href={ROUTES.LOGIN} className="underline hover:text-primary">Sign in here</Link>
+            </p>
           </div>
 
           <div className="pt-4 text-center">
