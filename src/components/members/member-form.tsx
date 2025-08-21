@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -51,6 +51,7 @@ interface MemberFormProps {
 }
 
 export function MemberForm({ member, onSuccess }: MemberFormProps) {
+  
   const [isLoading, setIsLoading] = useState(false);
   const [errorDialog, setErrorDialog] = useState<{isOpen: boolean, message: string}>({isOpen: false, message: ''});
   const isEditing = !!member;
@@ -60,24 +61,70 @@ export function MemberForm({ member, onSuccess }: MemberFormProps) {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<MemberFormData>({
     resolver: zodResolver(memberSchema),
     defaultValues: {
-      firstName: member?.firstName || '',
-      lastName: member?.lastName || '',
-      email: member?.email || '',
-      phone: member?.phone || '',
-      membershipStatus: member?.membershipStatus || 'active',
-      joinDate: member?.joinDate || new Date().toISOString().split('T')[0],
-      emergencyContactName: member?.emergencyContact?.name || '',
-      emergencyContactPhone: member?.emergencyContact?.phone || '',
-      emergencyContactRelationship: member?.emergencyContact?.relationship || '',
-      medicalConditions: member?.medicalConditions || '',
-      fitnessGoals: member?.fitnessGoals || '',
-      preferredTrainingTimes: member?.preferredTrainingTimes?.join(', ') || '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      membershipStatus: 'active',
+      joinDate: new Date().toISOString().split('T')[0],
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      emergencyContactRelationship: '',
+      medicalConditions: '',
+      fitnessGoals: '',
+      preferredTrainingTimes: '',
     },
   });
+
+  // Reset form values when member data changes (for edit mode)
+  useEffect(() => {
+    
+    if (member && isEditing) {
+      
+      const formData = {
+        firstName: member.firstName || '',
+        lastName: member.lastName || '',
+        email: member.email || '',
+        phone: member.phone || '',
+        membershipStatus: member.membershipStatus || 'active',
+        joinDate: member.joinDate || new Date().toISOString().split('T')[0],
+        emergencyContactName: member.emergencyContact?.name || '',
+        emergencyContactPhone: member.emergencyContact?.phone || '',
+        emergencyContactRelationship: member.emergencyContact?.relationship || '',
+        medicalConditions: member.medicalConditions || '',
+        fitnessGoals: member.fitnessGoals || '',
+        preferredTrainingTimes: member.preferredTrainingTimes?.join(', ') || '',
+      };
+      
+      
+      // Small delay to ensure form is properly initialized
+      setTimeout(() => {
+        reset(formData);
+      }, 0);
+      
+    } else if (!isEditing) {
+      // Reset to empty form for new member creation
+      reset({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        membershipStatus: 'active',
+        joinDate: new Date().toISOString().split('T')[0],
+        emergencyContactName: '',
+        emergencyContactPhone: '',
+        emergencyContactRelationship: '',
+        medicalConditions: '',
+        fitnessGoals: '',
+        preferredTrainingTimes: '',
+      });
+    }
+  }, [member, isEditing, reset]);
 
   const membershipStatus = watch('membershipStatus');
 

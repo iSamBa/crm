@@ -27,7 +27,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useMembershipPlans, useSubscriptionActions } from '@/lib/hooks/use-subscriptions';
 import { useMembers } from '@/lib/hooks/use-members';
-import { subscriptionService } from '@/lib/services/subscription-service';
+import { subscriptionService, SubscriptionWithMember } from '@/lib/services/subscription-service';
 import { Check, User } from 'lucide-react';
 import { dateFormatters } from '@/lib/utils/date-formatting';
 
@@ -43,23 +43,25 @@ type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
 
 interface SubscriptionFormProps {
   memberId?: string;
+  subscription?: SubscriptionWithMember;
   onSuccess?: () => void;
 }
 
-export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps) {
-  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+export function SubscriptionForm({ memberId, subscription, onSuccess }: SubscriptionFormProps) {
+  const isEditing = !!subscription;
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(subscription?.plan?.id || '');
   const { plans, isLoading: plansLoading } = useMembershipPlans();
   const { members, isLoading: membersLoading } = useMembers({});
-  const { createSubscription, isLoading } = useSubscriptionActions();
+  const { createSubscription, updateSubscription, isLoading } = useSubscriptionActions();
 
   const form = useForm<SubscriptionFormData>({
     resolver: zodResolver(subscriptionSchema),
     defaultValues: {
-      memberId: memberId || '',
-      planId: '',
-      startDate: new Date().toISOString().split('T')[0],
-      autoRenew: true,
-      customPrice: '',
+      memberId: subscription?.member?.id || memberId || '',
+      planId: subscription?.plan?.id || '',
+      startDate: subscription?.startDate ? new Date(subscription.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      autoRenew: subscription?.autoRenew ?? true,
+      customPrice: subscription && subscription.price !== subscription.plan?.price ? subscription.price.toString() : '',
     },
   });
 
@@ -71,23 +73,42 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
     const price = data.customPrice ? parseFloat(data.customPrice) : selectedPlan.price;
     const endDate = subscriptionService.calculateEndDate(data.startDate, selectedPlan.duration);
 
-    const subscriptionData = {
-      memberId: data.memberId,
-      planId: data.planId,
-      startDate: data.startDate,
-      endDate,
-      autoRenew: data.autoRenew,
-      price,
-    };
+    if (isEditing && subscription) {
+      // Update existing subscription
+      const updateData = {
+        id: subscription.id,
+        planId: data.planId,
+        startDate: data.startDate,
+        endDate,
+        autoRenew: data.autoRenew,
+        price,
+      };
 
-    const { data: subscription, error } = await createSubscription(subscriptionData);
+      const { error } = await updateSubscription(updateData);
 
-    if (error) {
-      console.error('Error creating subscription:', error);
-      // You might want to show a toast notification here
+      if (error) {
+        console.error('Error updating subscription:', error);
+      } else {
+        onSuccess?.();
+      }
     } else {
-      console.log('Subscription created successfully:', subscription);
-      onSuccess?.();
+      // Create new subscription
+      const subscriptionData = {
+        memberId: data.memberId,
+        planId: data.planId,
+        startDate: data.startDate,
+        endDate,
+        autoRenew: data.autoRenew,
+        price,
+      };
+
+      const { error } = await createSubscription(subscriptionData);
+
+      if (error) {
+        console.error('Error creating subscription:', error);
+      } else {
+        onSuccess?.();
+      }
     }
   };
 
@@ -425,7 +446,9 @@ export function SubscriptionForm({ memberId, onSuccess }: SubscriptionFormProps)
                     {/* Action Button */}
                     <div className="pt-4">
                       <Button type="submit" disabled={isLoading} className="w-full" size="lg">
-                        {isLoading ? 'Creating Subscription...' : 'Create Subscription'}
+                        {isLoading 
+                          ? (isEditing ? 'Updating Subscription...' : 'Creating Subscription...') 
+                          : (isEditing ? 'Update Subscription' : 'Create Subscription')}
                       </Button>
                     </div>
                   </CardContent>

@@ -30,12 +30,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -48,7 +42,7 @@ import {
   Search, 
   Download,
   Eye,
-  MoreHorizontal,
+  Edit,
   Play,
   Pause,
   X,
@@ -67,6 +61,8 @@ export default function SubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [planFilter, setPlanFilter] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingSubscription, setEditingSubscription] = useState<SubscriptionWithMember | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionWithMember | null>(null);
   const [actionDialog, setActionDialog] = useState<{isOpen: boolean, subscription: SubscriptionWithMember | null, action: 'cancel' | 'freeze' | 'reactivate' | null}>({isOpen: false, subscription: null, action: null});
   
@@ -159,6 +155,17 @@ export default function SubscriptionsPage() {
     refetch();
   };
 
+  const handleEditSubscription = (subscription: SubscriptionWithMember) => {
+    setEditingSubscription(subscription);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditDialogOpen(false);
+    setEditingSubscription(null);
+    refetch();
+  };
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -198,6 +205,22 @@ export default function SubscriptionsPage() {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Edit Subscription Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-7xl max-w-[95vw] w-[95vw] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Subscription</DialogTitle>
+            </DialogHeader>
+            {editingSubscription && (
+              <SubscriptionForm 
+                memberId={editingSubscription.member?.id || ''}
+                subscription={editingSubscription}
+                onSuccess={handleEditSuccess}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Stats Cards */}
         <SubscriptionStatsCards />
@@ -349,44 +372,62 @@ export default function SubscriptionsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" disabled={actionLoading}>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setSelectedSubscription(subscription)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            {subscription.status === 'active' && (
-                              <>
-                                <DropdownMenuItem 
-                                  onClick={() => handleAction(subscription, 'freeze')}
-                                >
-                                  <Pause className="h-4 w-4 mr-2" />
-                                  Freeze
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleAction(subscription, 'cancel')}
-                                  className="text-red-600"
-                                >
-                                  <X className="h-4 w-4 mr-2" />
-                                  Cancel
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {(subscription.status === 'frozen' || subscription.status === 'cancelled') && (
-                              <DropdownMenuItem 
-                                onClick={() => handleAction(subscription, 'reactivate')}
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedSubscription(subscription)}
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditSubscription(subscription)}
+                            title="Edit subscription"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {subscription.status === 'active' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAction(subscription, 'freeze')}
+                                disabled={actionLoading}
+                                title="Freeze subscription"
                               >
-                                <Play className="h-4 w-4 mr-2" />
-                                Reactivate
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                                <Pause className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAction(subscription, 'cancel')}
+                                className="text-red-600 hover:text-red-700"
+                                disabled={actionLoading}
+                                title="Cancel subscription"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          {(subscription.status === 'frozen' || subscription.status === 'cancelled') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleAction(subscription, 'reactivate')}
+                              className="text-green-600 hover:text-green-700"
+                              disabled={actionLoading}
+                              title="Reactivate subscription"
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {subscription.status === 'expired' && (
+                            <span className="text-sm text-muted-foreground">No actions</span>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

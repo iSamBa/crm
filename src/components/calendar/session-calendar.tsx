@@ -22,23 +22,25 @@ import {
 } from 'lucide-react';
 import { useCalendarSessions } from '@/lib/hooks/use-sessions';
 import { TrainingSession } from '@/types';
+import type { EventClickArg, DateSelectArg, EventContentArg } from '@fullcalendar/core';
 import { SessionModal } from './session-modal';
 import { SessionDetailModal } from './session-detail-modal';
 import { dateFormatters } from '@/lib/utils/date-formatting';
-import './fullcalendar-session.css';
+import { calculateSessionEndTime } from '@/lib/utils/session-utils';
+import './session-calendar.css';
 
-interface FullCalendarSessionProps {
+interface SessionCalendarProps {
   className?: string;
 }
 
-export function FullCalendarSession({ className }: FullCalendarSessionProps) {
+export function SessionCalendar({ className }: SessionCalendarProps) {
   const calendarRef = useRef<FullCalendar>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const [selectedSession, setSelectedSession] = useState<TrainingSession | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [createSlot, setCreateSlot] = useState<any>(null);
+  const [createSlot, setCreateSlot] = useState<{ start: Date; end: Date } | null>(null);
   const [filters, setFilters] = useState({
     trainerId: 'all',
     memberId: 'all',
@@ -85,7 +87,7 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
   const calendarEvents = useMemo(() => {
     return sessions.map(session => {
       const startDate = new Date(session.scheduledDate);
-      const endDate = new Date(startDate.getTime() + session.duration * 60000);
+      const endDate = calculateSessionEndTime(startDate, session.duration);
       
       return {
         id: session.id,
@@ -110,14 +112,14 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
   }, [sessions]);
 
   // Handle event clicks
-  const handleEventClick = useCallback((info: any) => {
+  const handleEventClick = useCallback((info: EventClickArg) => {
     const session = info.event.extendedProps.session;
     setSelectedSession(session);
     setIsDetailModalOpen(true);
   }, []);
 
   // Handle date selection for creating new sessions
-  const handleDateSelect = useCallback((selectInfo: any) => {
+  const handleDateSelect = useCallback((selectInfo: DateSelectArg) => {
     setCreateSlot({
       start: selectInfo.start,
       end: selectInfo.end
@@ -153,7 +155,7 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
   }, []);
 
   // Custom event content renderer
-  const renderEventContent = useCallback((eventInfo: any) => {
+  const renderEventContent = useCallback((eventInfo: EventContentArg) => {
     const { session, memberName, trainerName } = eventInfo.event.extendedProps;
     
     // Format start and end times
@@ -161,17 +163,17 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
     const endTime = dateFormatters.shortTime(eventInfo.event.end);
     
     return (
-      <div className="fc-event-content-custom">
-        <div className="fc-event-title">{session.title}</div>
-        <div className="fc-event-time">{startTime} - {endTime}</div>
-        <div className="fc-event-member">{memberName}</div>
-        <div className="fc-event-trainer">{trainerName}</div>
+      <div className="p-1 flex flex-col gap-0.5 h-full justify-start">
+        <div className="font-bold text-xs leading-tight mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{session.title}</div>
+        <div className="text-[9px] font-medium leading-none opacity-85 mb-px whitespace-nowrap overflow-hidden text-ellipsis tracking-wide">{startTime} - {endTime}</div>
+        <div className="text-[10px] leading-none opacity-90 whitespace-nowrap overflow-hidden text-ellipsis">{memberName}</div>
+        <div className="text-[10px] leading-none opacity-90 whitespace-nowrap overflow-hidden text-ellipsis">{trainerName}</div>
       </div>
     );
   }, []);
 
   return (
-    <Card className={`fullcalendar-container ${className || ''}`}>
+    <Card className={`relative w-full max-w-full overflow-hidden h-auto ${className || ''}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -285,7 +287,8 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
           </div>
         ) : (
           <>
-            <FullCalendar
+            <div className="[&_.fc-scroller::-webkit-scrollbar]:w-2 [&_.fc-scroller::-webkit-scrollbar-track]:bg-muted [&_.fc-scroller::-webkit-scrollbar-track]:rounded [&_.fc-scroller::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&_.fc-scroller::-webkit-scrollbar-thumb]:rounded [&_.fc-scroller::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/50">
+              <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView={currentView}
@@ -321,7 +324,8 @@ export function FullCalendarSession({ className }: FullCalendarSessionProps) {
                 startTime: '09:00',
                 endTime: '22:00',
               }}
-            />
+              />
+            </div>
             
             {/* Show helpful message when no sessions exist */}
             {sessions.length === 0 && (

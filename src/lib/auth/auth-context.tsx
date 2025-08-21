@@ -70,7 +70,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('AuthContext: Initializing auth...');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -80,12 +79,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         
         if (session?.user) {
-          console.log('AuthContext: Found existing session for:', session.user.email);
           setSupabaseUser(session.user);
           const userProfile = await fetchUserProfile(session.user);
           setUser(userProfile);
         } else {
-          console.log('AuthContext: No existing session found');
         }
       } catch (error) {
         console.error('AuthContext: Error initializing auth:', error);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -45,6 +45,11 @@ import { useMembers } from '@/lib/hooks/use-members';
 import { useTrainers } from '@/lib/hooks/use-trainers';
 import { TrainingSession } from '@/types';
 import { CreateSessionData } from '@/lib/services/session-service';
+import { 
+  calculateDurationBetweenDates, 
+  getDefaultDurationByType,
+  getAvailableDurationOptions 
+} from '@/lib/utils/session-utils';
 
 const sessionSchema = z.object({
   memberId: z.string().min(1, 'Please select a member'),
@@ -89,17 +94,18 @@ export function SessionModal({
   
   const { createSession, updateSession, isLoading } = useSessionActions();
   const { checkConflicts, isChecking } = useConflictCheck();
-  const { members } = useMembers({ searchTerm: memberSearch });
+  const { members } = useMembers(); // Remove searchTerm from here to prevent infinite loop
   const { trainers, isLoading: trainersLoading, error: trainersError } = useTrainers();
 
   const isEditing = !!session;
 
-  // Calculate default duration from defaultDate and defaultEndDate
+  // Calculate default duration using utility functions
   const defaultDuration = defaultDate && defaultEndDate 
-    ? Math.round((defaultEndDate.getTime() - defaultDate.getTime()) / (1000 * 60))
-    : 60;
+    ? calculateDurationBetweenDates(defaultDate, defaultEndDate)
+    : getDefaultDurationByType('personal');
 
   // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+  // The database stores UTC time, but datetime-local input expects local time format
   const formatDateTimeLocal = (dateString: string | undefined) => {
     if (!dateString) return '';
     
@@ -108,6 +114,7 @@ export function SessionModal({
       if (isNaN(date.getTime())) return '';
       
       // Format to YYYY-MM-DDTHH:mm for datetime-local input
+      // The Date constructor automatically converts UTC to local time for display
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -201,13 +208,22 @@ export function SessionModal({
 
   const onSubmit = async (data: SessionFormData) => {
     try {
+      // Convert datetime-local value (YYYY-MM-DDTHH:mm) to proper ISO string
+      // The datetime-local input gives us local time, so we need to create a Date object
+      // that represents that local time and then convert to ISO string
+      let scheduledDateISO = data.scheduledDate;
+      if (data.scheduledDate) {
+        const localDate = new Date(data.scheduledDate);
+        scheduledDateISO = localDate.toISOString();
+      }
+
       const sessionData: CreateSessionData = {
         memberId: data.memberId,
         trainerId: data.trainerId,
         type: data.type,
         title: data.title,
         description: data.description,
-        scheduledDate: data.scheduledDate,
+        scheduledDate: scheduledDateISO,
         duration: data.duration,
         cost: data.cost || undefined,
         sessionRoom: data.sessionRoom,
@@ -244,11 +260,16 @@ export function SessionModal({
     specialization: trainer.specializations.join(', ') || 'General Training'
   }));
 
-  // Filtered members based on search
-  const filteredMembers = members.filter(member =>
-    `${member.firstName} ${member.lastName}`.toLowerCase().includes(memberSearch.toLowerCase()) ||
-    member.email?.toLowerCase().includes(memberSearch.toLowerCase())
-  );
+  // Filtered members based on search - use useMemo to prevent unnecessary re-calculations
+  const filteredMembers = useMemo(() => {
+    if (!memberSearch.trim()) {
+      return members;
+    }
+    return members.filter(member =>
+      `${member.firstName} ${member.lastName}`.toLowerCase().includes(memberSearch.toLowerCase()) ||
+      member.email?.toLowerCase().includes(memberSearch.toLowerCase())
+    );
+  }, [members, memberSearch]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -393,12 +414,11 @@ export function SessionModal({
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="30">30 minutes</SelectItem>
-                                <SelectItem value="45">45 minutes</SelectItem>
-                                <SelectItem value="60">1 hour</SelectItem>
-                                <SelectItem value="75">1 hour 15 minutes</SelectItem>
-                                <SelectItem value="90">1 hour 30 minutes</SelectItem>
-                                <SelectItem value="120">2 hours</SelectItem>
+                                {getAvailableDurationOptions().map((option) => (
+                                  <SelectItem key={option.value} value={option.value.toString()}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -502,10 +522,15 @@ export function SessionModal({
                                 ) : (
                                   availableTrainers.map((trainer) => (
                                     <SelectItem key={trainer.id} value={trainer.id}>
-                                      {trainer.name}
-                                      <Badge variant="outline" className="ml-2 text-xs">
-                                        {trainer.specialization}
-                                      </Badge>
+                                      <div className="flex items-center justify-between w-full">
+                                        <span>{trainer.name}</span>
+                                        <Badge 
+                                          variant="secondary" 
+                                          className="ml-2 text-xs bg-muted/50 text-foreground hover:bg-muted/70 transition-colors"
+                                        >
+                                          {trainer.specialization}
+                                        </Badge>
+                                      </div>
                                     </SelectItem>
                                   ))
                                 )}

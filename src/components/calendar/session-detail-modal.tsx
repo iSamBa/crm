@@ -103,12 +103,6 @@ export function SessionDetailModal({
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
-    console.log('Adding comment:', {
-      sessionId: session.id,
-      comment: newComment,
-      commentType,
-      isPrivate: false
-    });
 
     try {
       addComment({

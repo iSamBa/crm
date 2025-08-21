@@ -378,13 +378,7 @@ export default function MemberDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="sessions" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Training Sessions</h3>
-              <p className="text-sm text-muted-foreground">View and manage all training sessions for this member</p>
-            </div>
-          </div>
+        <TabsContent value="sessions">
           <MemberSessionsList memberId={memberId} />
         </TabsContent>
 

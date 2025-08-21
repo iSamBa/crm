@@ -13,7 +13,7 @@ export function useCalendarSessions(startDate: string, endDate: string, filters?
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     if (!startDate || !endDate) {
       setIsLoading(false);
       return;
@@ -31,11 +31,11 @@ export function useCalendarSessions(startDate: string, endDate: string, filters?
     }
     
     setIsLoading(false);
-  };
+  }, [startDate, endDate, filters]);
 
   useEffect(() => {
     fetchSessions();
-  }, [startDate, endDate, filters?.memberId, filters?.trainerId, filters?.status, filters?.type, filters?.sessionRoom]);
+  }, [fetchSessions]);
 
   return {
     sessions,
@@ -51,7 +51,7 @@ export function useMemberSessions(memberId: string, filters?: Omit<SessionFilter
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     if (!memberId) {
       setIsLoading(false);
       return;
@@ -62,6 +62,7 @@ export function useMemberSessions(memberId: string, filters?: Omit<SessionFilter
     
     const { data, error: fetchError } = await sessionService.getMemberSessions(memberId, filters);
     
+    
     if (fetchError) {
       setError(fetchError);
     } else {
@@ -69,11 +70,11 @@ export function useMemberSessions(memberId: string, filters?: Omit<SessionFilter
     }
     
     setIsLoading(false);
-  };
+  }, [memberId, filters]);
 
   useEffect(() => {
     fetchSessions();
-  }, [memberId, filters?.status, filters?.type, filters?.dateFrom, filters?.dateTo]);
+  }, [fetchSessions]);
 
   return {
     sessions,
@@ -89,7 +90,7 @@ export function useTrainerSessions(trainerId: string, filters?: Omit<SessionFilt
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     if (!trainerId) {
       setIsLoading(false);
       return;
@@ -107,11 +108,11 @@ export function useTrainerSessions(trainerId: string, filters?: Omit<SessionFilt
     }
     
     setIsLoading(false);
-  };
+  }, [trainerId, filters]);
 
   useEffect(() => {
     fetchSessions();
-  }, [trainerId, filters?.status, filters?.type, filters?.dateFrom, filters?.dateTo]);
+  }, [fetchSessions]);
 
   return {
     sessions,
@@ -220,7 +221,7 @@ export function useSessionComments(sessionId: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     if (!sessionId) {
       setIsLoading(false);
       return;
@@ -238,11 +239,11 @@ export function useSessionComments(sessionId: string) {
     }
     
     setIsLoading(false);
-  };
+  }, [sessionId]);
 
   useEffect(() => {
     fetchComments();
-  }, [sessionId]);
+  }, [fetchComments]);
 
   return {
     comments,
@@ -307,7 +308,7 @@ export function useSessionStats(filters?: SessionFilters) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -354,11 +355,11 @@ export function useSessionStats(filters?: SessionFilters) {
     }
     
     setIsLoading(false);
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchStats();
-  }, [filters?.memberId, filters?.trainerId, filters?.dateFrom, filters?.dateTo]);
+  }, [fetchStats]);
 
   return {
     stats,

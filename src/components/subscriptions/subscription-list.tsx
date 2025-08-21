@@ -13,12 +13,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -29,7 +23,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  MoreHorizontal,
   Pause,
   Play,
   X,
@@ -188,40 +181,43 @@ export function SubscriptionList({ memberId }: SubscriptionListProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {subscription.status === 'active' && (
-                          <>
-                            <DropdownMenuItem 
-                              onClick={() => openActionDialog(subscription, 'freeze')}
-                            >
-                              <Pause className="h-4 w-4 mr-2" />
-                              Freeze
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => openActionDialog(subscription, 'cancel')}
-                              className="text-red-600"
-                            >
-                              <X className="h-4 w-4 mr-2" />
-                              Cancel
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        {(subscription.status === 'frozen' || subscription.status === 'cancelled') && (
-                          <DropdownMenuItem 
-                            onClick={() => openActionDialog(subscription, 'reactivate')}
+                    <div className="flex items-center justify-end space-x-2">
+                      {subscription.status === 'active' && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openActionDialog(subscription, 'freeze')}
+                            title="Freeze subscription"
                           >
-                            <Play className="h-4 w-4 mr-2" />
-                            Reactivate
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                            <Pause className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openActionDialog(subscription, 'cancel')}
+                            className="text-red-600 hover:text-red-700"
+                            title="Cancel subscription"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      {(subscription.status === 'frozen' || subscription.status === 'cancelled') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openActionDialog(subscription, 'reactivate')}
+                          className="text-green-600 hover:text-green-700"
+                          title="Reactivate subscription"
+                        >
+                          <Play className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {subscription.status === 'expired' && (
+                        <span className="text-sm text-muted-foreground">No actions</span>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

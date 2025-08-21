@@ -34,7 +34,7 @@ class UserService extends BaseService {
       'Failed to fetch user',
       {
         logQuery: `Fetching user by ID: ${id}`,
-        transform: (data: any) => data ? this.transformUserData(data) : null,
+        transform: (data: unknown) => data ? this.transformUserData(data as Record<string, unknown>) : null,
         allowEmpty: false
       }
     );
@@ -44,7 +44,7 @@ class UserService extends BaseService {
    * Get all users (admins and trainers)
    */
   async getUsers(): Promise<ServiceResponse<User[]>> {
-    return this.executeQuery(
+    const result = await this.executeQuery(
       async () => {
         return this.db
           .from(this.tableName)
@@ -54,18 +54,24 @@ class UserService extends BaseService {
       'Failed to fetch users',
       {
         logQuery: 'Fetching all users',
-        transform: (data: any[]) => data ? data.map(user => this.transformUserData(user)) : [],
+        transform: (data: unknown) => data ? (data as Record<string, unknown>[]).map(user => this.transformUserData(user)) : [],
         allowEmpty: true,
         expectArray: true
       }
     );
+    
+    // Ensure we return an empty array instead of null for array responses
+    if (result.error && !result.data) {
+      return { data: [], error: result.error };
+    }
+    return result as ServiceResponse<User[]>;
   }
 
   /**
    * Get all trainers
    */
   async getTrainers(): Promise<ServiceResponse<User[]>> {
-    return this.executeQuery(
+    const result = await this.executeQuery(
       async () => {
         return this.db
           .from(this.tableName)
@@ -76,11 +82,17 @@ class UserService extends BaseService {
       'Failed to fetch trainers',
       {
         logQuery: 'Fetching all trainers',
-        transform: (data: any[]) => data ? data.map(user => this.transformUserData(user)) : [],
+        transform: (data: unknown) => data ? (data as Record<string, unknown>[]).map(user => this.transformUserData(user)) : [],
         allowEmpty: true,
         expectArray: true
       }
     );
+    
+    // Ensure we return an empty array instead of null for array responses
+    if (result.error && !result.data) {
+      return { data: [], error: result.error };
+    }
+    return result as ServiceResponse<User[]>;
   }
 
   /**
@@ -96,7 +108,7 @@ class UserService extends BaseService {
     return this.executeMutation(
       async () => {
         // Manual field transformation to ensure correct mapping
-        const dbData: any = {
+        const dbData: Record<string, unknown> = {
           updated_at: new Date().toISOString()
         };
         
@@ -116,7 +128,6 @@ class UserService extends BaseService {
           dbData.avatar = validation.data!.avatar;
         }
         
-        console.log('Updating user with data:', dbData);
         
         return this.db
           .from(this.tableName)
@@ -128,7 +139,7 @@ class UserService extends BaseService {
       'Failed to update user profile',
       {
         logOperation: `Updating profile for user: ${userId}`,
-        transform: (data: any) => this.transformUserData(data),
+        transform: (data: unknown) => this.transformUserData(data as Record<string, unknown>),
         invalidateQueries: [
           () => this.cache.invalidateQueries({ queryKey: ['user', userId] }),
           () => this.cache.invalidateQueries({ queryKey: ['users'] }),
@@ -172,7 +183,7 @@ class UserService extends BaseService {
   /**
    * Get user preferences
    */
-  async getUserPreferences(userId: string): Promise<ServiceResponse<any>> {
+  async getUserPreferences(userId: string): Promise<ServiceResponse<Record<string, unknown>>> {
     return this.executeQuery(
       async () => {
         return this.db
@@ -192,7 +203,7 @@ class UserService extends BaseService {
   /**
    * Update or create user preferences
    */
-  async updateUserPreferences(userId: string, preferences: any): Promise<ServiceResponse<any>> {
+  async updateUserPreferences(userId: string, preferences: Record<string, unknown>): Promise<ServiceResponse<Record<string, unknown>>> {
     return this.executeMutation(
       async () => {
         const dataToUpsert = {
@@ -217,7 +228,7 @@ class UserService extends BaseService {
   /**
    * Transform database user data to frontend User type
    */
-  private transformUserData(dbUser: any): User {
+  private transformUserData(dbUser: Record<string, unknown>): User {
     if (!dbUser) {
       throw new Error('Invalid user data: dbUser is null or undefined');
     }

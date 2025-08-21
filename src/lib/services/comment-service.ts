@@ -31,7 +31,7 @@ export class CommentService extends BaseService {
       {
         logQuery: `Fetching comments for session ${sessionId}`,
         allowEmpty: true,
-        transform: (data) => data?.map((comment: any) => this.transformCommentData(comment)) || []
+        transform: (data) => data?.map((comment: unknown) => this.transformCommentData(comment as Record<string, unknown>)) || []
       }
     );
   }
@@ -92,7 +92,7 @@ export class CommentService extends BaseService {
       return { data: null, error: 'Comment ID is required' };
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.comment !== undefined) updateData.comment = updates.comment;
     if (updates.commentType !== undefined) updateData.comment_type = updates.commentType;
     if (updates.isPrivate !== undefined) updateData.is_private = updates.isPrivate;
@@ -157,7 +157,7 @@ export class CommentService extends BaseService {
   /**
    * Transform database comment data to frontend format
    */
-  private transformCommentData(dbComment: any): SessionComment {
+  private transformCommentData(dbComment: Record<string, unknown>): SessionComment {
     return {
       id: dbComment.id,
       sessionId: dbComment.session_id,

@@ -217,35 +217,36 @@ export default function TrainersPage() {
     setViewMode('list');
   };
 
-  // If viewing trainer detail, show the detail view
-  if (viewMode === 'detail' && selectedTrainerId) {
-    return (
-      <AdminLayout>
-        <div className="space-y-6">
-          {/* Back button */}
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={handleBackToList}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Trainers
-            </Button>
-          </div>
-          
-          {/* Trainer detail view */}
-          <TrainerDetailView 
-            trainerId={selectedTrainerId} 
-            onBack={handleBackToList}
-          />
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  // Otherwise show the list view
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Conditional content based on view mode */}
+        {viewMode === 'detail' && selectedTrainerId ? (
+          <>
+            {/* Back button */}
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={handleBackToList}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Trainers
+              </Button>
+            </div>
+            
+            {/* Trainer detail view */}
+            <TrainerDetailView 
+              trainerId={selectedTrainerId} 
+              onBack={handleBackToList}
+              onEdit={() => {
+                const trainer = trainers.find(t => t.id === selectedTrainerId);
+                if (trainer) {
+                  setEditingTrainer(trainer);
+                }
+              }}
+            />
+          </>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Trainers</h1>
             <p className="text-muted-foreground">
@@ -447,7 +448,10 @@ export default function TrainersPage() {
             </div>
           </div>
         )}
+          </>
+        )}
 
+        {/* Shared dialogs - available in both list and detail views */}
         {editingTrainer && (
           <Dialog open={!!editingTrainer} onOpenChange={() => setEditingTrainer(null)}>
             <DialogContent className="sm:max-w-7xl max-w-[95vw] w-[95vw] max-h-[90vh] overflow-y-auto">

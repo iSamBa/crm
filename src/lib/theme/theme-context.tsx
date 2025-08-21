@@ -30,9 +30,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   useEffect(() => {
     setMounted(true);
-    
+
     const savedTheme = localStorage.getItem('theme') as Theme | null;
-    
+
     if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
       setThemeState(savedTheme);
     } else {
@@ -45,13 +45,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (!mounted) return;
 
     const root = document.documentElement;
-    
+
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-    
+
     localStorage.setItem('theme', theme);
   }, [theme, mounted]);
 

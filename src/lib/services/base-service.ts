@@ -12,30 +12,30 @@ export interface ServiceResult {
   error: string | null;
 }
 
-export interface QueryOptions {
+export interface QueryOptions<T = unknown> {
   logQuery?: string;
   allowEmpty?: boolean;
   expectArray?: boolean;
-  validate?: z.ZodSchema<any>;
-  transform?: (data: any) => any;
+  validate?: z.ZodSchema<T>;
+  transform?: (data: unknown) => T;
 }
 
-export interface MutationOptions {
+export interface MutationOptions<T = unknown> {
   logOperation?: string;
-  validate?: z.ZodSchema<any>;
+  validate?: z.ZodSchema<T>;
   invalidateQueries?: (() => void)[];
   optimisticUpdate?: {
     queryKey: readonly string[];
-    updater: (oldData: any) => any;
+    updater: (oldData: unknown) => unknown;
   };
-  transform?: (data: any) => any;
+  transform?: (data: unknown) => T;
 }
 
 export abstract class BaseService {
   /**
    * Enhanced error handling with detailed information
    */
-  protected handleError(error: any, defaultMessage: string): string {
+  protected handleError(error: unknown, defaultMessage: string): string {
     // Supabase specific errors
     if (error?.code) {
       switch (error.code) {
@@ -76,22 +76,16 @@ export abstract class BaseService {
    * Execute a Supabase query with modern patterns
    */
   protected async executeQuery<T>(
-    queryFn: () => Promise<{ data: T; error: any }>,
+    queryFn: () => Promise<{ data: T; error: unknown }>,
     errorMessage: string,
-    options: QueryOptions = {}
+    options: QueryOptions<T> = {}
   ): Promise<ServiceResponse<T>> {
     try {
-      if (options.logQuery && process.env.NODE_ENV === 'development') {
-        console.log(`[${this.constructor.name}] ${options.logQuery}`);
-      }
 
       const result = await queryFn();
       let { data } = result;
       const { error } = result;
 
-      if (options.logQuery && process.env.NODE_ENV === 'development') {
-        console.log(`[${this.constructor.name}] Query result:`, { data, error });
-      }
 
       if (error) {
         console.error(`[${this.constructor.name}] Error:`, error);
@@ -145,17 +139,14 @@ export abstract class BaseService {
   /**
    * Execute a Supabase mutation with optimistic updates and cache invalidation
    */
-  protected async executeMutation<T = any>(
-    mutationFn: () => Promise<{ data?: T; error: any }>,
+  protected async executeMutation<T = unknown>(
+    mutationFn: () => Promise<{ data?: T; error: unknown }>,
     errorMessage: string,
-    options: MutationOptions = {}
+    options: MutationOptions<T> = {}
   ): Promise<ServiceResponse<T>> {
     let rollbackFn: (() => void) | null = null;
 
     try {
-      if (options.logOperation && process.env.NODE_ENV === 'development') {
-        console.log(`[${this.constructor.name}] ${options.logOperation}`);
-      }
 
       // Apply optimistic update
       if (options.optimisticUpdate) {
@@ -216,10 +207,10 @@ export abstract class BaseService {
   /**
    * Transform database field names to frontend camelCase
    */
-  protected transformFields(dbData: any, fieldMap: Record<string, string>): any {
+  protected transformFields<T = Record<string, unknown>>(dbData: Record<string, unknown> | null, fieldMap: Record<string, string>): T | null {
     if (!dbData) return null;
 
-    const transformed: any = {};
+    const transformed: Record<string, unknown> = {};
     
     // Copy direct fields and transform mapped fields
     for (const [dbField, frontendField] of Object.entries(fieldMap)) {
@@ -235,16 +226,16 @@ export abstract class BaseService {
       }
     }
 
-    return transformed;
+    return transformed as T;
   }
 
   /**
    * Transform frontend camelCase fields to database snake_case
    */
-  protected transformToDbFields(frontendData: any, fieldMap: Record<string, string>): any {
+  protected transformToDbFields(frontendData: Record<string, unknown> | null, fieldMap: Record<string, string>): Record<string, unknown> | null {
     if (!frontendData) return null;
 
-    const transformed: any = {};
+    const transformed: Record<string, unknown> = {};
     const reverseMap = Object.fromEntries(
       Object.entries(fieldMap).map(([db, frontend]) => [frontend, db])
     );

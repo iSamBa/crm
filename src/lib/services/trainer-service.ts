@@ -159,7 +159,7 @@ class TrainerService extends BaseService {
     );
 
     return {
-      data: result.data ? this.transformTrainerData(result.data) : null,
+      data: result.data || null,
       error: result.error
     };
   }
@@ -187,8 +187,6 @@ class TrainerService extends BaseService {
               availability,
               bio,
               years_experience,
-              created_at,
-              updated_at,
               users!inner(
                 id,
                 email,
@@ -222,21 +220,19 @@ class TrainerService extends BaseService {
             query = query.lte('hourly_rate', filters.hourlyRateMax);
           }
 
-          // Apply sorting - order by trainers table columns only  
+          // Apply sorting - order by trainers table id since we can't order by joined table columns in Supabase
           const sortOrder = { ascending: filters?.sortOrder === 'asc' };
-          query = query.order('created_at', sortOrder);
+          query = query.order('id', sortOrder);
 
           const { data, error } = await query;
 
           if (error) {
-            console.log('Trainer query error:', error);
             throw error;
           }
 
           return { data: data || [], error: null };
 
-        } catch (error) {
-          console.log('Falling back to users table for trainers');
+        } catch {
           // Fallback to users table only
           const { data: userData, error: userError } = await this.db
             .from('users')
@@ -247,14 +243,17 @@ class TrainerService extends BaseService {
           if (userError) throw userError;
 
           // Transform user data to trainer format
-          const trainers = (userData || []).map((user: any) => ({
-            id: user.id,
-            specializations: ['General Training'],
-            certifications: [],
-            hourly_rate: 50,
-            availability: {},
-            users: user
-          }));
+          const trainers = (userData || []).map((user: unknown) => {
+            const userRecord = user as Record<string, unknown>;
+            return {
+              id: userRecord.id,
+              specializations: ['General Training'],
+              certifications: [],
+              hourly_rate: 50,
+              availability: {},
+              users: userRecord
+            };
+          });
 
           return { data: trainers, error: null };
         }
@@ -267,7 +266,7 @@ class TrainerService extends BaseService {
     );
 
     return {
-      data: result.data ? (result.data || []).map((trainer: any) => this.transformTrainerData(trainer)) : [],
+      data: result.data ? (result.data || []).map((trainer: unknown) => this.transformTrainerData(trainer as Record<string, unknown>)) : [],
       error: result.error
     };
   }
@@ -284,7 +283,7 @@ class TrainerService extends BaseService {
     const result = await this.executeMutation(
       async () => {
         // Update user profile if basic info changed
-        const userUpdates: any = {};
+        const userUpdates: Record<string, unknown> = {};
         if (updateFields.firstName) userUpdates.first_name = updateFields.firstName;
         if (updateFields.lastName) userUpdates.last_name = updateFields.lastName;
         if (updateFields.email) userUpdates.email = updateFields.email;
@@ -300,7 +299,7 @@ class TrainerService extends BaseService {
         }
 
         // Update trainer-specific data
-        const trainerUpdates: any = {};
+        const trainerUpdates: Record<string, unknown> = {};
         if (updateFields.specializations) trainerUpdates.specializations = updateFields.specializations;
         if (updateFields.certifications) trainerUpdates.certifications = updateFields.certifications;
         if (updateFields.hourlyRate !== undefined) trainerUpdates.hourly_rate = updateFields.hourlyRate;
@@ -344,14 +343,14 @@ class TrainerService extends BaseService {
         ],
         optimisticUpdate: {
           queryKey: queryKeys.trainers.detail(id),
-          updater: (oldData: Trainer) => ({ ...oldData, ...updateFields })
+          updater: (oldData: unknown) => ({ ...(oldData as Trainer), ...updateFields })
         },
-        transform: (data) => this.transformTrainerData(data)
+        transform: (data: unknown) => this.transformTrainerData(data as Record<string, unknown>)
       }
     );
 
     return {
-      data: result.data ? this.transformTrainerData(result.data) : null,
+      data: result.data || null,
       error: result.error
     };
   }
@@ -457,25 +456,27 @@ class TrainerService extends BaseService {
   }
 
   // Transform database trainer data to frontend Trainer type
-  private transformTrainerData(dbTrainer: any): Trainer {
+  private transformTrainerData(dbTrainer: Record<string, unknown>): Trainer {
     if (!dbTrainer || !dbTrainer.users) {
       throw new Error('Invalid trainer data: missing user information');
     }
 
+    const users = dbTrainer.users as Record<string, unknown>;
+
     return {
-      id: dbTrainer.users.id || '',
-      email: dbTrainer.users.email || '',
+      id: (users.id as string) || '',
+      email: (users.email as string) || '',
       role: 'trainer',
-      firstName: dbTrainer.users.first_name || '',
-      lastName: dbTrainer.users.last_name || '',
-      phone: dbTrainer.users.phone || null,
-      avatar: dbTrainer.users.avatar || null,
-      createdAt: dbTrainer.users.created_at || new Date().toISOString(),
-      updatedAt: dbTrainer.users.updated_at || new Date().toISOString(),
-      specializations: dbTrainer.specializations || ['General Training'],
-      certifications: dbTrainer.certifications || [],
-      hourlyRate: dbTrainer.hourly_rate || 50,
-      availability: dbTrainer.availability || {}
+      firstName: (users.first_name as string) || '',
+      lastName: (users.last_name as string) || '',
+      phone: (users.phone as string) || null,
+      avatar: (users.avatar as string) || null,
+      createdAt: (users.created_at as string) || new Date().toISOString(),
+      updatedAt: (users.updated_at as string) || new Date().toISOString(),
+      specializations: (dbTrainer.specializations as string[]) || ['General Training'],
+      certifications: (dbTrainer.certifications as string[]) || [],
+      hourlyRate: (dbTrainer.hourly_rate as number) || 50,
+      availability: (dbTrainer.availability as { [key: string]: { start: string; end: string }[] }) || {}
     };
   }
 

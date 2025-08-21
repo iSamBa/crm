@@ -93,16 +93,23 @@ class MemberService extends BaseService {
     }
 
     const result = await this.executeQuery(
-      async () => await this.db.from('members').select('*').eq('id', id).single(),
+      async () => {
+        const dbResult = await this.db.from('members').select('*').eq('id', id).single();
+        return dbResult;
+      },
       'Failed to fetch member',
       {
         logQuery: `Fetching member ${id}`,
-        transform: (data) => this.transformMemberData(data)
+        transform: (data) => {
+          const transformed = this.transformMemberData(data);
+          return transformed;
+        }
       }
     );
 
+    // Don't double-transform! The transform function already did it
     return {
-      data: result.data ? this.transformMemberData(result.data) : null,
+      data: result.data || null,
       error: result.error
     };
   }
@@ -156,7 +163,7 @@ class MemberService extends BaseService {
     );
 
     return {
-      data: result.data ? (result.data || []).map((member: any) => this.transformMemberData(member)) : [],
+      data: result.data ? (result.data || []).map((member: unknown) => this.transformMemberData(member as Record<string, unknown>)) : [],
       error: result.error
     };
   }
@@ -362,7 +369,7 @@ class MemberService extends BaseService {
   }
 
   // Get recent member activities with caching
-  async getRecentMemberActivities(limit = 10): Promise<ServiceResponse<any[]>> {
+  async getRecentMemberActivities(limit = 10): Promise<ServiceResponse<Record<string, unknown>[]>> {
     return this.executeQuery(
       async () => {
         const result = await this.db
@@ -439,7 +446,7 @@ class MemberService extends BaseService {
   }
 
   // Transform database member data to frontend Member type
-  private transformMemberData(dbMember: any): Member {
+  private transformMemberData(dbMember: Record<string, unknown>): Member {
     if (!dbMember) {
       throw new Error('Invalid member data: dbMember is null or undefined');
     }

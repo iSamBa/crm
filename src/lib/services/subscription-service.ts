@@ -1,3 +1,4 @@
+import { BaseService, ServiceResponse } from './base-service';
 import { supabase } from '@/lib/supabase/client';
 
 export interface MembershipPlan {
@@ -69,23 +70,24 @@ export interface SubscriptionStats {
   planDistribution: { [key: string]: number };
 }
 
-class SubscriptionService {
+class SubscriptionService extends BaseService {
   // Get all membership plans
-  async getMembershipPlans(): Promise<{ data: MembershipPlan[]; error: string | null }> {
+  async getMembershipPlans(): Promise<ServiceResponse<MembershipPlan[]>> {
     try {
-      const { data: plans, error } = await supabase
-        .from('membership_plans')
-        .select('*')
-        .eq('is_active', true)
-        .order('price', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching membership plans:', error);
-        return { data: [], error: error.message };
-      }
-
-      const transformedPlans = (plans || []).map(plan => this.transformMembershipPlanData(plan));
-      return { data: transformedPlans, error: null };
+      return this.executeQuery(
+        async () => this.db
+          .from('membership_plans')
+          .select('*')
+          .eq('is_active', true)
+          .order('price', { ascending: true }),
+        'Failed to fetch membership plans',
+        {
+          logQuery: 'Fetching membership plans',
+          transform: (data: unknown) => (data as Record<string, unknown>[]).map(plan => this.transformMembershipPlanData(plan)),
+          allowEmpty: true,
+          expectArray: true
+        }
+      );
     } catch (error) {
       console.error('Unexpected error fetching membership plans:', error);
       return { data: [], error: 'Failed to fetch membership plans' };
@@ -168,7 +170,7 @@ class SubscriptionService {
   // Update a subscription
   async updateSubscription(data: UpdateSubscriptionData): Promise<{ data: Subscription | null; error: string | null }> {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (data.status) updateData.status = data.status;
       if (data.endDate) updateData.end_date = data.endDate;
@@ -409,8 +411,8 @@ class SubscriptionService {
     try {
       // Get subscriptions and plans separately
       const [subscriptionsResult, plansResult] = await Promise.all([
-        supabase.from('subscriptions').select('*'),
-        supabase.from('membership_plans').select('id, name')
+        this.db.from('subscriptions').select('*'),
+        this.db.from('membership_plans').select('id, name')
       ]);
 
       if (subscriptionsResult.error) {
@@ -470,7 +472,7 @@ class SubscriptionService {
   }
 
   // Transform database subscription data
-  private transformSubscriptionData(dbSubscription: any): Subscription {
+  private transformSubscriptionData(dbSubscription: Record<string, unknown>): Subscription {
     return {
       id: dbSubscription.id,
       memberId: dbSubscription.member_id,
@@ -486,7 +488,7 @@ class SubscriptionService {
   }
 
   // Transform database membership plan data
-  private transformMembershipPlanData(dbPlan: any): MembershipPlan {
+  private transformMembershipPlanData(dbPlan: Record<string, unknown>): MembershipPlan {
     return {
       id: dbPlan.id,
       name: dbPlan.name,

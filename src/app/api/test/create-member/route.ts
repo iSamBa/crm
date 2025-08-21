@@ -3,7 +3,6 @@ import { memberService } from '@/lib/services/member-service';
 
 export async function POST() {
   try {
-    console.log('Testing member creation...');
     
     // Test data that matches the form structure
     const testMemberData = {
@@ -23,7 +22,6 @@ export async function POST() {
       preferredTrainingTimes: ['morning', 'evening']
     };
 
-    console.log('Attempting to create member with data:', testMemberData);
 
     const { data: member, error } = await memberService.createMember(testMemberData);
 
@@ -40,12 +38,10 @@ export async function POST() {
       );
     }
 
-    console.log('Member created successfully:', member);
 
     // Clean up - delete the test member
     if (member?.id) {
-      const { data: deleteResult } = await memberService.deleteMember(member.id);
-      console.log('Test member cleanup:', deleteResult?.success ? 'successful' : 'failed');
+      await memberService.deleteMember(member.id);
     }
 
     return NextResponse.json({

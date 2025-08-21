@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { memberService, type MemberStats } from '@/lib/services/member-service';
 import { type MemberFilters, type CreateMemberData, type UpdateMemberData } from '@/lib/schemas';
 import { Member } from '@/types';
@@ -9,7 +9,7 @@ export function useMembers(filters?: MemberFilters) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -22,11 +22,11 @@ export function useMembers(filters?: MemberFilters) {
     }
     
     setIsLoading(false);
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchMembers();
-  }, [filters?.status, filters?.searchTerm, filters?.joinDateFrom, filters?.joinDateTo]);
+  }, [fetchMembers]);
 
   return {
     members,
@@ -42,7 +42,7 @@ export function useMember(id: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMember = async () => {
+  const fetchMember = useCallback(async () => {
     if (!id) {
       setIsLoading(false);
       return;
@@ -60,11 +60,11 @@ export function useMember(id: string | null) {
     }
     
     setIsLoading(false);
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchMember();
-  }, [id]);
+  }, [fetchMember]);
 
   return {
     member,
@@ -204,7 +204,7 @@ export function useRecentMemberActivities(limit = 10) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchActivities = async () => {
+  const fetchActivities = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -217,11 +217,11 @@ export function useRecentMemberActivities(limit = 10) {
     }
     
     setIsLoading(false);
-  };
+  }, [limit]);
 
   useEffect(() => {
     fetchActivities();
-  }, [limit]);
+  }, [fetchActivities]);
 
   return {
     activities,

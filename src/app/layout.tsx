@@ -5,6 +5,7 @@ import { AuthProvider } from "@/lib/auth/auth-context";
 import { QueryProvider } from "@/lib/query-provider";
 import { ThemeProvider } from "@/lib/theme/theme-context";
 import { AppShell } from "@/components/layout/app-shell";
+import { appConfig } from "@/lib/utils/app-config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fitness Studio CRM",
-  description: "Modern CRM system for fitness studios",
+  title: appConfig.name,
+  description: appConfig.description,
 };
 
 export default function RootLayout({

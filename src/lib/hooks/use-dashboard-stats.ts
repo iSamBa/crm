@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { memberService } from '@/lib/services/member-service';
 import { subscriptionService } from '@/lib/services/subscription-service';
 import { sessionService } from '@/lib/services/session-service';
+import { dateFormatters } from '@/lib/utils/date-formatting';
 
 export interface DashboardStats {
   totalMembers: number;
@@ -115,29 +116,23 @@ export function useRecentActivities(limit = 10) {
         throw new Error(`Member activities error: ${memberError}`);
       }
 
-      // Get recent sessions (last 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { data: recentSessions, error: sessionsError } = await sessionService.getSessionsByDateRange(
-        sevenDaysAgo.toISOString().split('T')[0],
-        new Date().toISOString().split('T')[0]
-      );
+      // Get recently created sessions
+      const { data: recentSessions, error: sessionsError } = await sessionService.getRecentlyCreatedSessions(limit);
 
       if (sessionsError) {
         console.warn('Sessions activities error:', sessionsError);
       }
 
       // Transform session data to activities
-      const sessionActivities = (recentSessions || []).slice(0, limit).map(session => ({
+      const sessionActivities = (recentSessions || []).map(session => ({
         type: 'session_scheduled',
-        title: 'Training session scheduled',
+        title: 'Training session created',
         description: `${session.title} with ${session.member?.firstName || 'Member'} ${session.member?.lastName || ''}`.trim(),
-        time: new Date(session.scheduledDate).toLocaleDateString(),
+        time: dateFormatters.shortDateTime(session.createdAt || session.scheduledDate),
         sessionTitle: session.title,
         memberName: session.member ? `${session.member.firstName} ${session.member.lastName}` : 'Unknown Member',
         trainerName: session.trainer ? `${session.trainer.firstName} ${session.trainer.lastName}` : 'Unknown Trainer',
-        timestamp: session.scheduledDate,
+        timestamp: session.createdAt || session.scheduledDate,
       }));
 
       // Combine and sort activities by timestamp

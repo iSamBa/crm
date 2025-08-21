@@ -3,11 +3,9 @@ import { AdminDashboardStats } from '@/components/dashboard/admin-dashboard-stat
 import { AdminDashboardActivities } from '@/components/dashboard/admin-dashboard-activities';
 import { AdminDashboardActions } from '@/components/dashboard/admin-dashboard-actions';
 import { Metadata } from 'next';
+import { generatePageMetadata } from '@/lib/utils/app-config';
 
-export const metadata: Metadata = {
-  title: 'Admin Dashboard - Fitness Studio CRM',
-  description: 'Overview of your fitness studio operations',
-};
+export const metadata: Metadata = generatePageMetadata('Admin Dashboard', 'Overview of your fitness studio operations');
 
 export default function AdminDashboard() {
   return (

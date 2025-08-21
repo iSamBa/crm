@@ -47,7 +47,7 @@ export function useMemberSubscriptions(memberId: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async () => {
     if (!memberId) return;
     
     setIsLoading(true);
@@ -62,11 +62,11 @@ export function useMemberSubscriptions(memberId: string) {
     }
     
     setIsLoading(false);
-  };
+  }, [memberId]);
 
   useEffect(() => {
     fetchSubscriptions();
-  }, [memberId]);
+  }, [fetchSubscriptions]);
 
   return {
     subscriptions,

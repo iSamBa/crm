@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { TrainingSession, SessionComment, RecurringPattern } from '@/types';
+import { calculateSessionEndTime } from '@/lib/utils/session-utils';
 
 export interface CreateSessionData {
   memberId: string;
@@ -47,7 +48,6 @@ class SessionService {
     filters?: SessionFilters
   ): Promise<{ data: TrainingSession[]; error: string | null }> {
     try {
-      console.log('[SessionService] Fetching sessions by date range:', { startDate, endDate, filters });
       
       let query = supabase
         .from('training_sessions')
@@ -73,20 +73,17 @@ class SessionService {
 
       const { data: sessions, error } = await query;
 
-      console.log('[SessionService] Query result:', { sessions, error });
 
       if (error) {
         console.error('Error fetching sessions by date range:', error);
         // If training_sessions table columns don't exist yet, return empty array
         if (error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('column')) {
-          console.warn('Training sessions table may be missing columns. Please run database setup.');
           return { data: [], error: null };
         }
         return { data: [], error: error.message };
       }
 
       const transformedSessions = (sessions || []).map(session => this.transformSessionData(session));
-      console.log('[SessionService] Transformed sessions:', transformedSessions);
       
       return { data: transformedSessions, error: null };
     } catch (error) {
@@ -158,7 +155,7 @@ class SessionService {
 
   async updateSession(data: UpdateSessionData): Promise<{ data: TrainingSession | null; error: string | null }> {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
 
       // Basic fields
       if (data.title) updateData.title = data.title;
@@ -290,12 +287,12 @@ class SessionService {
   }
 
   // Conflict detection and availability
-  async checkConflicts(trainerId: string, scheduledDate: string, duration: number): Promise<Array<{ type: string; details: any }>> {
+  async checkConflicts(trainerId: string, scheduledDate: string, duration: number): Promise<Array<{ type: string; details: Record<string, unknown> }>> {
     try {
       const sessionStart = new Date(scheduledDate);
-      const sessionEnd = new Date(sessionStart.getTime() + duration * 60000);
+      const sessionEnd = calculateSessionEndTime(sessionStart, duration);
 
-      const conflicts: Array<{ type: string; details: any }> = [];
+      const conflicts: Array<{ type: string; details: Record<string, unknown> }> = [];
 
       // Check trainer availability
       const dayOfWeek = sessionStart.getDay();
@@ -342,6 +339,45 @@ class SessionService {
     }
   }
 
+  // Get recently created sessions for activities feed
+  async getRecentlyCreatedSessions(limit = 10): Promise<{ data: TrainingSession[]; error: string | null }> {
+    try {
+      
+      const query = supabase
+        .from('training_sessions')
+        .select(`
+          *,
+          members:member_id (
+            id, first_name, last_name, email
+          ),
+          users:trainer_id (
+            id, first_name, last_name, email
+          )
+        `)
+        .order('created_at', { ascending: false }) // Order by creation date, not scheduled date
+        .limit(limit);
+
+      const { data: sessions, error } = await query;
+
+
+      if (error) {
+        console.error('Error fetching recently created sessions:', error);
+        // If training_sessions table columns don't exist yet, return empty array
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('column')) {
+          return { data: [], error: null };
+        }
+        return { data: [], error: error.message };
+      }
+
+      const transformedSessions = (sessions || []).map(session => this.transformSessionData(session));
+      
+      return { data: transformedSessions, error: null };
+    } catch (error) {
+      console.error('Unexpected error fetching recently created sessions:', error);
+      return { data: [], error: 'Failed to fetch recently created sessions' };
+    }
+  }
+
   // Member and trainer specific queries
   async getMemberSessions(memberId: string, filters?: SessionFilters): Promise<{ data: TrainingSession[]; error: string | null }> {
     return this.getSessionsByDateRange(
@@ -360,14 +396,13 @@ class SessionService {
   }
 
   // Helper methods
-  private async createRecurringSessions(parentSessionId: string, data: CreateSessionData): Promise<void> {
+  private async createRecurringSessions(_parentSessionId: string, _data: CreateSessionData): Promise<void> {
     // Implementation for creating recurring sessions
     // This would create multiple sessions based on the recurring pattern
-    console.log('Creating recurring sessions for:', parentSessionId, data.recurringPattern);
     // TODO: Implement recurring session logic
   }
 
-  private transformSessionData(dbSession: any): TrainingSession {
+  private transformSessionData(dbSession: Record<string, unknown>): TrainingSession {
     return {
       id: dbSession.id,
       memberId: dbSession.member_id,
@@ -407,7 +442,7 @@ class SessionService {
     };
   }
 
-  private transformCommentData(dbComment: any): SessionComment {
+  private transformCommentData(dbComment: Record<string, unknown>): SessionComment {
     return {
       id: dbComment.id,
       sessionId: dbComment.session_id,

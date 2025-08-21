@@ -192,11 +192,54 @@ export interface TrainerAvailability {
   endDate?: string;
 }
 
+export interface TrainerUnavailableDetails {
+  trainerId: string;
+  trainerName: string;
+  conflictingSchedule?: {
+    start: string;
+    end: string;
+    type: string;
+  };
+}
+
+export interface MemberBookedDetails {
+  memberId: string;
+  memberName: string;
+  conflictingSessionId: string;
+  conflictingSessionTime: {
+    start: string;
+    end: string;
+  };
+}
+
+export interface RoomOccupiedDetails {
+  roomId: string;
+  roomName: string;
+  occupyingSessionId: string;
+  timeSlot: {
+    start: string;
+    end: string;
+  };
+}
+
+export interface EquipmentUnavailableDetails {
+  equipmentIds: string[];
+  equipmentNames: string[];
+  unavailableReason: 'maintenance' | 'reserved' | 'broken' | 'in_use';
+  expectedAvailableAt?: string;
+}
+
+export type SessionConflictDetails = 
+  | TrainerUnavailableDetails
+  | MemberBookedDetails
+  | RoomOccupiedDetails
+  | EquipmentUnavailableDetails;
+
 export interface SessionConflict {
   id: string;
   sessionId: string;
   conflictType: 'trainer_unavailable' | 'member_booked' | 'room_occupied' | 'equipment_unavailable';
-  conflictDetails: any;
+  conflictDetails: SessionConflictDetails;
   resolved: boolean;
   resolvedAt?: string;
   resolvedBy?: string;

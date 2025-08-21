@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useTheme } from '@/lib/theme/theme-context';
+import { appConfig } from '@/lib/utils/app-config';
 import { 
   Users, 
   CreditCard, 
@@ -30,7 +31,7 @@ import {
   Sun
 } from 'lucide-react';
 
-interface SidebarItem {
+export interface SidebarItem {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -63,7 +64,7 @@ export function Sidebar({ items, role }: SidebarProps) {
     <div className={cn("flex flex-col h-full w-64 border-r", config.bgColor)}>
       <div className="p-6 border-b">
         <h2 className="text-xl font-bold text-primary">{config.title}</h2>
-        <p className="text-sm text-muted-foreground">Fitness Studio CRM</p>
+        <p className="text-sm text-muted-foreground">{appConfig.name}</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">

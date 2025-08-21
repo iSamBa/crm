@@ -82,13 +82,7 @@ export function MemberTabs({ member, onSubscriptionUpdated }: MemberTabsProps) {
         </div>
       </TabsContent>
 
-      <TabsContent value="sessions" className="space-y-4">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold">Training Sessions</h3>
-            <p className="text-sm text-muted-foreground">View and manage all training sessions for this member</p>
-          </div>
-        </div>
+      <TabsContent value="sessions">
         <MemberSessionsList memberId={member.id} />
       </TabsContent>
 

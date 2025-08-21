@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
-import { Sidebar, adminNavItems, trainerNavItems } from './sidebar';
+import { Sidebar, adminNavItems, trainerNavItems, type SidebarItem } from './sidebar';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -25,7 +25,7 @@ export function AppShell({ children }: AppShellProps) {
   const isTrainerRoute = pathname.startsWith('/trainer');
   
   let role: 'admin' | 'trainer' | null = null;
-  let navItems = [];
+  let navItems: SidebarItem[] = [];
 
   if (isAdminRoute && user?.role === 'admin') {
     role = 'admin';

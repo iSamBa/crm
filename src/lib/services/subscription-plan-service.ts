@@ -35,7 +35,7 @@ class SubscriptionPlanService extends BaseService {
    * Get all subscription plans with filtering and sorting
    */
   async getPlans(filters?: SubscriptionPlanFilters): Promise<ServiceResponse<SubscriptionPlan[]>> {
-    return this.executeQuery(
+    const result = await this.executeQuery(
       async () => {
         let query = this.db
           .from(this.tableName)
@@ -74,11 +74,17 @@ class SubscriptionPlanService extends BaseService {
       'Failed to fetch subscription plans',
       {
         logQuery: 'Fetching subscription plans',
-        transform: (data: any[]) => data.map(plan => this.transformPlanData(plan)),
+        transform: (data: unknown) => (data as Record<string, unknown>[]).map(plan => this.transformPlanData(plan)),
         allowEmpty: true,
         expectArray: true
       }
     );
+    
+    // Ensure we return an empty array instead of null for array responses
+    if (result.error && !result.data) {
+      return { data: [], error: result.error };
+    }
+    return result as ServiceResponse<SubscriptionPlan[]>;
   }
 
   /**
@@ -94,7 +100,7 @@ class SubscriptionPlanService extends BaseService {
       'Failed to fetch subscription plan',
       {
         logQuery: `Fetching subscription plan: ${id}`,
-        transform: (data: any) => this.transformPlanData(data)
+        transform: (data: unknown) => this.transformPlanData(data as Record<string, unknown>)
       }
     );
   }
@@ -128,7 +134,7 @@ class SubscriptionPlanService extends BaseService {
           this.invalidate.subscriptionPlans.all,
           this.invalidate.subscriptionPlans.lists
         ],
-        transform: (data: any) => this.transformPlanData(data)
+        transform: (data: unknown) => this.transformPlanData(data as Record<string, unknown>)
       }
     );
   }
@@ -171,7 +177,7 @@ class SubscriptionPlanService extends BaseService {
               plan.id === id ? { ...plan, ...updateData } : plan
             ) || []
         },
-        transform: (data: any) => this.transformPlanData(data)
+        transform: (data: unknown) => this.transformPlanData(data as Record<string, unknown>)
       }
     );
   }
@@ -255,7 +261,7 @@ class SubscriptionPlanService extends BaseService {
               plan.id === id ? { ...plan, isActive } : plan
             ) || []
         },
-        transform: (data: any) => this.transformPlanData(data)
+        transform: (data: unknown) => this.transformPlanData(data as Record<string, unknown>)
       }
     );
   }
@@ -288,21 +294,23 @@ class SubscriptionPlanService extends BaseService {
           annualRevenue: 0
         };
 
-        // Calculate revenue by duration
+        // Calculate revenue by duration using actual subscription prices
         subscriptions
           .filter(s => s.status === 'active')
           .forEach(sub => {
             const plan = sub.membership_plans;
+            // Use actual subscription price, not plan base price
+            const actualPrice = parseFloat(sub.price || '0');
             if (plan) {
               switch (plan.duration) {
                 case 'monthly':
-                  stats.monthlyRevenue += plan.price;
+                  stats.monthlyRevenue += actualPrice;
                   break;
                 case 'quarterly':
-                  stats.quarterlyRevenue += plan.price;
+                  stats.quarterlyRevenue += actualPrice;
                   break;
                 case 'annual':
-                  stats.annualRevenue += plan.price;
+                  stats.annualRevenue += actualPrice;
                   break;
               }
             }
@@ -320,7 +328,7 @@ class SubscriptionPlanService extends BaseService {
   /**
    * Transform database subscription plan data to frontend format
    */
-  private transformPlanData(dbPlan: any): SubscriptionPlan {
+  private transformPlanData(dbPlan: Record<string, unknown>): SubscriptionPlan {
     return this.transformFields(dbPlan, this.fieldMap) as SubscriptionPlan;
   }
 }

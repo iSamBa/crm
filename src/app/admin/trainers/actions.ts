@@ -36,7 +36,6 @@ export async function getTrainersServer(filters?: TrainerFilters): Promise<{
   error: string | null;
 }> {
   try {
-    console.log('Fetching trainers server-side...');
     
     // Start from users table and join trainers - this allows proper sorting by user fields
     let query = supabaseAdmin
@@ -129,7 +128,6 @@ export async function getTrainersServer(filters?: TrainerFilters): Promise<{
       updatedAt: user.updated_at
     }));
 
-    console.log(`Successfully fetched ${trainers.length} trainers`);
     return { data: trainers, error: null };
 
   } catch (error) {
@@ -146,7 +144,6 @@ export async function getTrainerByIdServer(trainerId: string): Promise<{
   error: string | null;
 }> {
   try {
-    console.log('Fetching trainer by ID server-side:', trainerId);
     
     // Get single trainer with user data
     const { data, error } = await supabaseAdmin
@@ -200,7 +197,6 @@ export async function getTrainerByIdServer(trainerId: string): Promise<{
       updatedAt: data.updated_at
     };
 
-    console.log(`Successfully fetched trainer: ${trainer.firstName} ${trainer.lastName}`);
     return { data: trainer, error: null };
 
   } catch (error) {

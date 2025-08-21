@@ -181,7 +181,6 @@ END $$;
 
 export async function POST() {
   try {
-    console.log('Updating training sessions schema...');
 
     const results = [];
 

@@ -120,7 +120,6 @@ export function SessionsList({
           queryClient.invalidateQueries({ queryKey: queryKeys.sessions.trainer(entityId, undefined) });
         }
         queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-        console.log('Session deleted successfully');
         showResultDialog('success', 'Session Deleted', 'The training session has been deleted successfully.');
       } else {
         console.error('Failed to delete session:', error);

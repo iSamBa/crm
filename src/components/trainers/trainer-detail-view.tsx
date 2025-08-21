@@ -23,9 +23,10 @@ import { useTrainerStats } from '@/lib/hooks/use-trainer-stats';
 interface TrainerDetailViewProps {
   trainerId: string;
   onBack: () => void;
+  onEdit?: () => void;
 }
 
-export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps) {
+export function TrainerDetailView({ trainerId, onBack, onEdit }: TrainerDetailViewProps) {
   // Modern TanStack Query hooks for data fetching
   const { 
     data: trainer, 
@@ -83,7 +84,7 @@ export function TrainerDetailView({ trainerId, onBack }: TrainerDetailViewProps)
                 </div>
               </div>
             </div>
-            <Button>
+            <Button onClick={onEdit}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Trainer
             </Button>

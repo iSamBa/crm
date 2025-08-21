@@ -12,7 +12,6 @@ export function TrainerSessionsList({ trainerId }: TrainerSessionsListProps) {
 
   const handleScheduleSession = () => {
     // TODO: Implement session scheduling modal
-    console.log('Schedule session for trainer:', trainerId);
   };
 
   return (

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Search, Users, UserCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
+import { appConfig } from '@/lib/utils/app-config';
 
 export default function RootNotFound() {
   const router = useRouter();
@@ -125,7 +126,7 @@ export default function RootNotFound() {
 
           <div className="pt-4 text-center">
             <p className="text-xs text-muted-foreground">
-              Fitness Studio CRM • Error 404
+              {appConfig.name} • Error 404
             </p>
           </div>
         </CardContent>

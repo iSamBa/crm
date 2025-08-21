@@ -1,6 +1,6 @@
 'use client';
 
-import { FullCalendarSession } from '@/components/calendar/fullcalendar-session';
+import { SessionCalendar } from '@/components/calendar/session-calendar';
 import { AdminLayout } from '@/components/layout/admin-layout';
 
 export default function AdminCalendarPage() {
@@ -14,7 +14,7 @@ export default function AdminCalendarPage() {
           </p>
         </div>
 
-        <FullCalendarSession />
+        <SessionCalendar />
       </div>
     </AdminLayout>
   );

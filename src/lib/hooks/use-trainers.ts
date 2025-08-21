@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { trainerService } from '@/lib/services/trainer-service';
 import { TrainerFilters } from '@/lib/schemas';
 import { Trainer } from '@/types';
@@ -8,7 +8,7 @@ export function useTrainers(filters?: TrainerFilters) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTrainers = async () => {
+  const fetchTrainers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -21,11 +21,11 @@ export function useTrainers(filters?: TrainerFilters) {
     }
     
     setIsLoading(false);
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchTrainers();
-  }, [filters?.searchTerm, filters?.specialization, filters?.isActive]);
+  }, [fetchTrainers]);
 
   return {
     trainers,
@@ -40,7 +40,7 @@ export function useTrainer(id: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTrainer = async () => {
+  const fetchTrainer = useCallback(async () => {
     if (!id) {
       setIsLoading(false);
       return;
@@ -58,11 +58,11 @@ export function useTrainer(id: string) {
     }
     
     setIsLoading(false);
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchTrainer();
-  }, [id]);
+  }, [fetchTrainer]);
 
   return {
     trainer,
@@ -77,7 +77,7 @@ export function useTrainerAvailability(trainerId: string, date: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const checkAvailability = async () => {
+  const checkAvailability = useCallback(async () => {
     if (!trainerId || !date) {
       return;
     }
@@ -95,11 +95,11 @@ export function useTrainerAvailability(trainerId: string, date: string) {
     }
     
     setIsLoading(false);
-  };
+  }, [trainerId, date]);
 
   useEffect(() => {
     checkAvailability();
-  }, [trainerId, date]);
+  }, [checkAvailability]);
 
   return {
     availability,
