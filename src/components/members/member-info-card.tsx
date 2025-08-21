@@ -64,7 +64,7 @@ export function MemberInfoCard({ member }: MemberInfoCardProps) {
               
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span>Inscrit le {mediumDate(member.joinDate)}</span>
+                <span>Joined on {mediumDate(member.joinDate)}</span>
               </div>
             </div>
           </div>
