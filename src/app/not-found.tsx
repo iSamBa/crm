@@ -2,43 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Home, Search, Users, UserCheck } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth/auth-context';
+import { Home, Search } from 'lucide-react';
+import Link from 'next/link';
 import { appConfig } from '@/lib/utils/app-config';
 
 export default function RootNotFound() {
-  const router = useRouter();
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // If user is authenticated, redirect to their appropriate dashboard
-  const getDashboardPath = () => {
-    if (user?.role === 'admin') return '/admin/dashboard';
-    if (user?.role === 'trainer') return '/trainer/dashboard';
-    return '/auth/login';
-  };
-
-  const getDashboardLabel = () => {
-    if (user?.role === 'admin') return 'Admin Dashboard';
-    if (user?.role === 'trainer') return 'Trainer Dashboard';
-    return 'Login';
-  };
-
-  const getDashboardIcon = () => {
-    if (user?.role === 'admin') return Users;
-    if (user?.role === 'trainer') return UserCheck;
-    return Home;
-  };
-
-  const DashboardIcon = getDashboardIcon();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center p-4">
@@ -54,75 +22,14 @@ export default function RootNotFound() {
             The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </p>
           
-          <div className="pt-4">
-            <Button 
-              onClick={() => router.push(getDashboardPath())}
-              className="flex items-center gap-2 w-full"
-            >
-              <DashboardIcon className="h-4 w-4" />
-              {getDashboardLabel()}
+          <div className="pt-4 space-y-3">
+            <Button asChild className="flex items-center gap-2 w-full">
+              <Link href="/">
+                <Home className="h-4 w-4" />
+                Back to Home
+              </Link>
             </Button>
           </div>
-          
-          {user && (
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground mb-3">
-                Quick links for {user.role}s:
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {user.role === 'admin' && (
-                  <>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => router.push('/admin/members')}
-                    >
-                      Members
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => router.push('/admin/trainers')}
-                    >
-                      Trainers
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => router.push('/admin/calendar')}
-                    >
-                      Calendar
-                    </Button>
-                  </>
-                )}
-                {user.role === 'trainer' && (
-                  <>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => router.push('/trainer/clients')}
-                    >
-                      My Clients
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => router.push('/trainer/schedule')}
-                    >
-                      Schedule
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => router.push('/trainer/sessions')}
-                    >
-                      Sessions
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
 
           <div className="pt-4 text-center">
             <p className="text-xs text-muted-foreground">
