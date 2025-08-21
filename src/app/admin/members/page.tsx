@@ -135,10 +135,6 @@ export default function MembersPage() {
     );
   }
 
-  // Debug function - you can call this in browser console
-  if (typeof window !== 'undefined') {
-    (window as any).testMemberAccess = testMemberAccess;
-  }
 
   const handleSelectMember = (memberId: string) => {
     setSelectedMembers(prev => 
