@@ -330,3 +330,195 @@ The application is now fully modernized with 2024-2025 best practices. Current c
 - **Member Portal**: Self-service subscription management for customers
 
 **Remember**: Always follow the established modern patterns. The architecture is now optimized for performance, maintainability, and scalability using cutting-edge React and Next.js techniques.
+
+## 🌐 Professional Development & GitHub Integration
+
+### 📝 Git Workflow & Collaboration Standards
+
+**Branch Naming Convention**:
+```
+feature/add-member-analytics
+fix/subscription-payment-bug
+hotfix/critical-session-booking-issue
+chore/update-dependencies
+docs/update-api-documentation
+```
+
+**Commit Message Standards** (Conventional Commits):
+```
+feat: add member analytics dashboard with real-time metrics
+fix: resolve subscription payment processing timeout
+chore: update TanStack Query to v5.85.4
+docs: add deployment guide for production environments
+test: add unit tests for session booking validation
+refactor: optimize member query performance with indexing
+```
+
+**Pull Request Requirements**:
+- Descriptive title following conventional commit format
+- Clear description of changes and motivation
+- Screenshots for UI changes
+- Checklist of testing completed
+- Link to related issues or tickets
+- Code review from at least 1 team member
+- All CI/CD checks must pass
+
+### 🔍 Code Review Standards
+
+**Before Creating PR**:
+1. ✅ Run all quality checks locally: `npm run lint && npm run type-check && npm run build`
+2. ✅ Test with demo accounts to ensure functionality works
+3. ✅ Verify responsive design on multiple screen sizes
+4. ✅ Check console for errors or warnings
+5. ✅ Ensure proper error handling and loading states
+
+**Code Review Checklist**:
+- [ ] Code follows established patterns (BaseService, TanStack Query, Zod validation)
+- [ ] No security vulnerabilities introduced
+- [ ] Performance considerations addressed
+- [ ] Proper error handling implemented
+- [ ] Type safety maintained throughout
+- [ ] Accessibility standards met
+- [ ] Mobile responsiveness verified
+- [ ] No breaking changes without migration plan
+
+### 🚀 Production Deployment Rules
+
+**Environment Promotion Flow**:
+```
+feature/branch → develop → staging → main → production
+```
+
+**Production Deployment Checklist**:
+1. ✅ All tests passing in staging environment
+2. ✅ Performance metrics within acceptable ranges
+3. ✅ Security scan completed without critical issues
+4. ✅ Database migration tested and validated
+5. ✅ Rollback plan documented and tested
+6. ✅ Monitoring and alerting configured
+7. ✅ Team notification and deployment window scheduled
+
+**Post-Deployment Verification**:
+- Health check endpoints responding correctly
+- Core user flows tested in production
+- Error rates within normal thresholds
+- Performance metrics stable
+
+### 📊 Quality Gates & CI/CD
+
+**Required Status Checks** (must pass before merge):
+```yaml
+- Code Quality (ESLint, Prettier)
+- Type Safety (TypeScript compilation)  
+- Security Audit (npm audit)
+- Build Process (production build success)
+- Unit Tests (when implemented)
+- E2E Tests (critical user flows)
+```
+
+**Automated Quality Enforcement**:
+- ESLint with strict TypeScript rules
+- Prettier code formatting
+- Husky pre-commit hooks
+- GitHub Actions CI/CD pipeline
+- Automated dependency updates with Dependabot
+- Security vulnerability scanning
+
+### 🔐 Security & Best Practices
+
+**Security Requirements**:
+- Never commit secrets or API keys to repository
+- Use environment variables for all configuration
+- Implement proper input validation with Zod schemas
+- Follow OWASP security guidelines
+- Regular dependency updates for security patches
+- Code scanning for vulnerabilities
+
+**Development Best Practices**:
+- Always create feature branches from latest develop
+- Keep commits small and focused on single changes
+- Write descriptive commit messages explaining the "why"
+- Use TypeScript strictly - no `any` types allowed
+- Implement proper error boundaries and fallback UI
+- Follow accessibility guidelines (WCAG 2.1 AA)
+- Optimize for Core Web Vitals performance metrics
+
+### 📚 Documentation Standards
+
+**Required Documentation**:
+- Update CLAUDE.md for any architecture changes
+- API documentation for new endpoints or services
+- Component documentation for complex UI components
+- Database schema changes documented
+- Deployment and configuration updates
+
+**Code Documentation**:
+- JSDoc comments for complex functions and utilities
+- README updates for significant feature additions
+- Inline comments explaining business logic decisions
+- Type definitions with descriptive property comments
+
+### 🎯 Team Collaboration
+
+**Issue Management**:
+- Create GitHub issues for all bugs and feature requests
+- Use issue templates for consistency
+- Label issues appropriately (bug, enhancement, documentation)
+- Link PRs to relevant issues
+- Update issue status as work progresses
+
+**Release Management**:
+- Follow semantic versioning (MAJOR.MINOR.PATCH)
+- Create release notes for each version
+- Tag releases in Git with descriptive information
+- Maintain changelog with user-facing changes
+- Coordinate releases with stakeholders
+
+**Knowledge Sharing**:
+- Document architectural decisions and rationale
+- Share learnings from complex implementations
+- Regular code review sessions for knowledge transfer
+- Maintain up-to-date development setup instructions
+
+### 📋 Development Setup for New Team Members
+
+**Required Tools**:
+- Node.js 20+ with npm
+- Git with configured SSH keys
+- VSCode with recommended extensions:
+  - ES7+ React/Redux/React-Native snippets
+  - Tailwind CSS IntelliSense
+  - TypeScript Importer
+  - Prettier - Code formatter
+  - ESLint
+- GitHub CLI for enhanced workflow
+
+**First-time Setup**:
+1. Clone repository and checkout develop branch
+2. Copy `.env.example` to `.env.local` and configure
+3. Run `npm install` to install dependencies
+4. Run `npm run setup-demo` to create sample data
+5. Start development server with `npm run dev`
+6. Verify application loads and test with demo accounts
+
+### 🚨 Emergency Procedures
+
+**Hotfix Process**:
+1. Create hotfix branch from main: `hotfix/critical-issue-description`
+2. Implement minimal fix with proper testing
+3. Create PR with detailed explanation and impact assessment
+4. Get expedited review from senior team member
+5. Deploy to staging for verification
+6. Merge to main and deploy to production
+7. Merge hotfix back to develop branch
+8. Create post-incident review
+
+**Rollback Procedures**:
+1. Identify the specific deployment causing issues
+2. Use platform rollback feature (Vercel/AWS)
+3. Verify rollback success with health checks
+4. Communicate status to team and stakeholders
+5. Investigate root cause and plan proper fix
+6. Document incident and lessons learned
+
+This comprehensive development framework ensures professional, scalable, and maintainable code delivery while supporting effective team collaboration.
