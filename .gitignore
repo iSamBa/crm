@@ -42,3 +42,6 @@ next-env.d.ts
 
 # MCP configuration (contains API keys)
 .mcp.json
+
+# Claude configurations
+.claude

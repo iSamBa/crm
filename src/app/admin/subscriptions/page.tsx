@@ -53,8 +53,9 @@ import { AdminLayout } from '@/components/layout/admin-layout';
 import { shortDate } from '@/lib/utils/date-formatting';
 import { SubscriptionStatsCards } from '@/components/subscriptions/subscription-stats-cards';
 import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
-import { useAllSubscriptions, useSubscriptionActions, useMembershipPlans } from '@/lib/hooks/use-subscriptions';
+import { useAllSubscriptionsModern, useSubscriptionActions, useMembershipPlans } from '@/lib/hooks/use-subscriptions';
 import { SubscriptionWithMember, SubscriptionFilters } from '@/lib/services/subscription-service';
+import { invalidateQueries } from '@/lib/query-client';
 
 export default function SubscriptionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -73,7 +74,7 @@ export default function SubscriptionsPage() {
     planId: planFilter !== 'all' ? planFilter : undefined,
   }), [searchTerm, statusFilter, planFilter]);
 
-  const { subscriptions, isLoading, refetch } = useAllSubscriptions(filters);
+  const { data: subscriptions = [], isLoading } = useAllSubscriptionsModern(filters);
   const { plans } = useMembershipPlans();
   const { 
     cancelSubscription, 
@@ -143,7 +144,7 @@ export default function SubscriptionsPage() {
 
     if (result.success) {
       setActionDialog({isOpen: false, subscription: null, action: null});
-      refetch();
+      invalidateQueries.subscriptions.lists();
     } else {
       console.error(`Error ${actionDialog.action}ing subscription:`, result.error);
       // Keep dialog open on error so user can retry
@@ -152,7 +153,7 @@ export default function SubscriptionsPage() {
 
   const handleCreateSuccess = () => {
     setIsCreateDialogOpen(false);
-    refetch();
+    invalidateQueries.subscriptions.lists();
   };
 
   const handleEditSubscription = (subscription: SubscriptionWithMember) => {
@@ -163,7 +164,7 @@ export default function SubscriptionsPage() {
   const handleEditSuccess = () => {
     setIsEditDialogOpen(false);
     setEditingSubscription(null);
-    refetch();
+    invalidateQueries.subscriptions.lists();
   };
 
   if (isLoading) {

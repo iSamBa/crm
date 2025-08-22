@@ -25,7 +25,7 @@ import type { SubscriptionPlanFilters } from '@/lib/schemas';
 
 export function SubscriptionPlansClient() {
   const [isHydrated, setIsHydrated] = useState(false);
-  const [filters, setFilters] = useState<SubscriptionPlanFilters>({
+  const [filters, setFilters] = useState<SubscriptionPlanFilters | undefined>({
     sortBy: 'name',
     sortOrder: 'asc',
   });
@@ -39,8 +39,12 @@ export function SubscriptionPlansClient() {
   }, []);
 
   // Apply search filter
-  const finalFilters = {
+  const finalFilters: SubscriptionPlanFilters = filters ? {
     ...filters,
+    searchTerm: searchTerm.trim() || undefined,
+  } : {
+    sortBy: 'name',
+    sortOrder: 'asc',
     searchTerm: searchTerm.trim() || undefined,
   };
 
@@ -156,9 +160,11 @@ export function SubscriptionPlansClient() {
             </div>
             <Select
               key="duration-filter"
-              value={filters.duration || 'all'}
+              value={filters?.duration || 'all'}
               onValueChange={(value) =>
                 setFilters(prev => ({
+                  sortBy: 'name',
+                  sortOrder: 'asc',
                   ...prev,
                   duration: value === 'all' ? undefined : value,
                 }))
@@ -176,9 +182,11 @@ export function SubscriptionPlansClient() {
             </Select>
             <Select
               key="status-filter"
-              value={filters.isActive === undefined ? 'all' : filters.isActive.toString()}
+              value={filters?.isActive === undefined ? 'all' : filters.isActive.toString()}
               onValueChange={(value) =>
                 setFilters(prev => ({
+                  sortBy: 'name',
+                  sortOrder: 'asc',
                   ...prev,
                   isActive: value === 'all' ? undefined : value === 'true',
                 }))

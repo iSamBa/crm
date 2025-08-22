@@ -1,29 +1,6 @@
 import { BaseService, ServiceResponse } from './base-service';
 import { supabase } from '@/lib/supabase/client';
-
-export interface MembershipPlan {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: 'monthly' | 'quarterly' | 'annual';
-  features: string[];
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface Subscription {
-  id: string;
-  memberId: string;
-  planId: string;
-  status: 'active' | 'cancelled' | 'frozen' | 'expired';
-  startDate: string;
-  endDate: string;
-  autoRenew: boolean;
-  price: number;
-  createdAt: string;
-  plan?: MembershipPlan;
-}
+import { MembershipPlan, Subscription } from '@/types';
 
 export interface CreateSubscriptionData {
   memberId: string;
@@ -74,7 +51,7 @@ class SubscriptionService extends BaseService {
   // Get all membership plans
   async getMembershipPlans(): Promise<ServiceResponse<MembershipPlan[]>> {
     try {
-      return this.executeQuery(
+      const result = await this.executeQuery(
         async () => this.db
           .from('membership_plans')
           .select('*')
@@ -88,6 +65,11 @@ class SubscriptionService extends BaseService {
           expectArray: true
         }
       );
+
+      return {
+        data: result.data || [],
+        error: result.error
+      };
     } catch (error) {
       console.error('Unexpected error fetching membership plans:', error);
       return { data: [], error: 'Failed to fetch membership plans' };
@@ -359,33 +341,37 @@ class SubscriptionService extends BaseService {
         const plan = plansMap.get(sub.plan_id);
 
         return {
-          id: sub.id,
-          memberId: sub.member_id,
-          planId: sub.plan_id,
-          status: sub.status,
-          startDate: sub.start_date,
-          endDate: sub.end_date,
-          autoRenew: sub.auto_renew,
-          price: sub.price,
-          createdAt: sub.created_at,
+          id: sub.id as string,
+          memberId: sub.member_id as string,
+          planId: sub.plan_id as string,
+          status: sub.status as any,
+          startDate: sub.start_date as string,
+          endDate: sub.end_date as string,
+          autoRenew: sub.auto_renew as boolean,
+          price: sub.price as number,
+          createdAt: sub.created_at as string,
+          updatedAt: sub.updated_at as string,
           member: member ? {
-            id: member.id,
-            firstName: member.first_name,
-            lastName: member.last_name,
-            email: member.email,
-            membershipStatus: member.membership_status
+            id: member.id as string,
+            firstName: member.first_name as string,
+            lastName: member.last_name as string,
+            email: member.email as string,
+            membershipStatus: member.membership_status as any
           } : undefined,
           plan: plan ? {
-            id: plan.id,
-            name: plan.name,
-            description: plan.description || '',
-            price: plan.price,
-            duration: plan.duration,
-            features: plan.features || [],
+            id: plan.id as string,
+            name: plan.name as string,
+            description: (plan.description as string) || '',
+            price: plan.price as number,
+            duration: plan.duration as any,
+            features: (plan.features as string[]) || [],
+            maxSessionsPerMonth: (plan as any).max_sessions_per_month as number | undefined,
+            includesPersonalTraining: (plan as any).includes_personal_training as boolean || false,
             isActive: true,
-            createdAt: new Date().toISOString()
+            createdAt: (plan as any).created_at as string || new Date().toISOString(),
+            updatedAt: (plan as any).updated_at as string || new Date().toISOString()
           } : undefined
-        };
+        } as SubscriptionWithMember;
       });
 
       // Apply search term filter (client-side)
@@ -474,30 +460,34 @@ class SubscriptionService extends BaseService {
   // Transform database subscription data
   private transformSubscriptionData(dbSubscription: Record<string, unknown>): Subscription {
     return {
-      id: dbSubscription.id,
-      memberId: dbSubscription.member_id,
-      planId: dbSubscription.plan_id,
-      status: dbSubscription.status,
-      startDate: dbSubscription.start_date,
-      endDate: dbSubscription.end_date,
-      autoRenew: dbSubscription.auto_renew,
-      price: dbSubscription.price,
-      createdAt: dbSubscription.created_at,
-      plan: dbSubscription.membership_plans ? this.transformMembershipPlanData(dbSubscription.membership_plans) : undefined
+      id: dbSubscription.id as string,
+      memberId: dbSubscription.member_id as string,
+      planId: dbSubscription.plan_id as string,
+      status: dbSubscription.status as 'active' | 'cancelled' | 'frozen' | 'expired',
+      startDate: dbSubscription.start_date as string,
+      endDate: dbSubscription.end_date as string,
+      autoRenew: dbSubscription.auto_renew as boolean,
+      price: dbSubscription.price as number,
+      createdAt: dbSubscription.created_at as string,
+      updatedAt: dbSubscription.updated_at as string,
+      plan: dbSubscription.membership_plans ? this.transformMembershipPlanData(dbSubscription.membership_plans as Record<string, unknown>) : undefined
     };
   }
 
   // Transform database membership plan data
   private transformMembershipPlanData(dbPlan: Record<string, unknown>): MembershipPlan {
     return {
-      id: dbPlan.id,
-      name: dbPlan.name,
-      description: dbPlan.description || '',
-      price: dbPlan.price,
-      duration: dbPlan.duration,
-      features: dbPlan.features || [],
-      isActive: dbPlan.is_active,
-      createdAt: dbPlan.created_at
+      id: dbPlan.id as string,
+      name: dbPlan.name as string,
+      description: (dbPlan.description as string) || '',
+      price: dbPlan.price as number,
+      duration: dbPlan.duration as 'monthly' | 'quarterly' | 'annual',
+      features: (dbPlan.features as string[]) || [],
+      maxSessionsPerMonth: dbPlan.max_sessions_per_month as number | undefined,
+      includesPersonalTraining: dbPlan.includes_personal_training as boolean,
+      isActive: dbPlan.is_active as boolean,
+      createdAt: dbPlan.created_at as string,
+      updatedAt: dbPlan.updated_at as string
     };
   }
 

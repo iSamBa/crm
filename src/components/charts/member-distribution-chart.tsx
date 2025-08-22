@@ -5,7 +5,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recha
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp } from 'lucide-react';
 import { MemberDistribution } from '@/lib/services/member-service';
-import { useMemberDistribution } from '@/lib/hooks/use-members-modern';
+import { useMemberDistribution } from '@/lib/hooks/use-members';
 
 interface CustomTooltipProps {
   active?: boolean;

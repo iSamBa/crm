@@ -30,7 +30,7 @@ import {
   Activity,
   Plus
 } from 'lucide-react';
-import { useMember } from '@/lib/hooks/use-members-modern';
+import { useMember } from '@/lib/hooks/use-members';
 import { MemberForm } from '@/components/members/member-form';
 import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';

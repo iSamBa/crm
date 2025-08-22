@@ -80,7 +80,7 @@ describe('BaseService', () => {
           received: 'number',
           path: ['firstName'],
           message: 'Expected string, received number',
-        },
+        } as any,
       ])
       const result = service.testHandleError(zodError, 'Default message')
       expect(result).toBe('firstName: Expected string, received number')

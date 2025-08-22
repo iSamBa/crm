@@ -142,9 +142,10 @@ class SessionService {
       }
 
       // Handle recurring sessions
-      if (data.recurringPattern) {
-        await this.createRecurringSessions(session.id, data);
-      }
+      // TODO: Implement recurring session logic
+      // if (data.recurringPattern) {
+      //   await this.createRecurringSessions(session.id, data);
+      // }
 
       return { data: this.transformSessionData(session), error: null };
     } catch (error) {
@@ -396,66 +397,63 @@ class SessionService {
   }
 
   // Helper methods
-  private async createRecurringSessions(): Promise<void> {
-    // Implementation for creating recurring sessions
-    // This would create multiple sessions based on the recurring pattern
-    // TODO: Implement recurring session logic
-  }
+  // TODO: Implement recurring session creation logic when needed
 
   private transformSessionData(dbSession: Record<string, unknown>): TrainingSession {
     return {
-      id: dbSession.id,
-      memberId: dbSession.member_id,
-      trainerId: dbSession.trainer_id,
-      type: dbSession.type,
-      title: dbSession.title,
-      description: dbSession.description,
-      scheduledDate: dbSession.scheduled_date,
-      duration: dbSession.duration,
-      status: dbSession.status,
-      notes: dbSession.notes,
-      cost: dbSession.cost,
-      sessionRoom: dbSession.session_room,
-      equipmentNeeded: dbSession.equipment_needed || [],
-      sessionGoals: dbSession.session_goals,
-      actualStartTime: dbSession.actual_start_time,
-      actualEndTime: dbSession.actual_end_time,
-      recurringPattern: dbSession.recurring_pattern,
-      createdBy: dbSession.created_by,
-      preparationNotes: dbSession.preparation_notes,
-      completionSummary: dbSession.completion_summary,
-      memberRating: dbSession.member_rating,
-      trainerRating: dbSession.trainer_rating,
-      createdAt: dbSession.created_at,
+      id: dbSession.id as string,
+      memberId: dbSession.member_id as string,
+      trainerId: dbSession.trainer_id as string,
+      type: dbSession.type as 'personal' | 'group' | 'class' | 'assessment' | 'consultation' | 'rehabilitation',
+      title: dbSession.title as string,
+      description: dbSession.description as string | undefined,
+      scheduledDate: dbSession.scheduled_date as string,
+      duration: dbSession.duration as number,
+      status: dbSession.status as 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled',
+      notes: dbSession.notes as string | undefined,
+      cost: dbSession.cost as number | undefined,
+      sessionRoom: dbSession.session_room as string | undefined,
+      equipmentNeeded: (dbSession.equipment_needed as string[]) || [],
+      sessionGoals: dbSession.session_goals as string | undefined,
+      actualStartTime: dbSession.actual_start_time as string | undefined,
+      actualEndTime: dbSession.actual_end_time as string | undefined,
+      recurringPattern: dbSession.recurring_pattern as any | undefined,
+      createdBy: dbSession.created_by as string | undefined,
+      preparationNotes: dbSession.preparation_notes as string | undefined,
+      completionSummary: dbSession.completion_summary as string | undefined,
+      memberRating: dbSession.member_rating as number | undefined,
+      trainerRating: dbSession.trainer_rating as number | undefined,
+      createdAt: dbSession.created_at as string,
+      updatedAt: dbSession.updated_at as string,
       member: dbSession.members ? {
-        id: dbSession.members.id,
-        firstName: dbSession.members.first_name,
-        lastName: dbSession.members.last_name,
-        email: dbSession.members.email
+        id: (dbSession.members as any).id as string,
+        firstName: (dbSession.members as any).first_name as string,
+        lastName: (dbSession.members as any).last_name as string,
+        email: (dbSession.members as any).email as string | undefined
       } : undefined,
       trainer: dbSession.users ? {
-        id: dbSession.users.id,
-        firstName: dbSession.users.first_name,
-        lastName: dbSession.users.last_name,
-        email: dbSession.users.email
+        id: (dbSession.users as any).id as string,
+        firstName: (dbSession.users as any).first_name as string,
+        lastName: (dbSession.users as any).last_name as string,
+        email: (dbSession.users as any).email as string | undefined
       } : undefined
     };
   }
 
   private transformCommentData(dbComment: Record<string, unknown>): SessionComment {
     return {
-      id: dbComment.id,
-      sessionId: dbComment.session_id,
-      userId: dbComment.user_id,
-      comment: dbComment.comment,
-      commentType: dbComment.comment_type,
-      isPrivate: dbComment.is_private,
-      createdAt: dbComment.created_at,
-      updatedAt: dbComment.updated_at,
+      id: dbComment.id as string,
+      sessionId: dbComment.session_id as string,
+      userId: dbComment.user_id as string,
+      comment: dbComment.comment as string,
+      commentType: dbComment.comment_type as 'note' | 'progress' | 'issue' | 'goal' | 'equipment' | 'feedback' | 'reminder',
+      isPrivate: dbComment.is_private as boolean,
+      createdAt: dbComment.created_at as string,
+      updatedAt: dbComment.updated_at as string,
       user: dbComment.users ? {
-        firstName: dbComment.users.first_name,
-        lastName: dbComment.users.last_name,
-        role: dbComment.users.role
+        firstName: (dbComment.users as any).first_name as string,
+        lastName: (dbComment.users as any).last_name as string,
+        role: (dbComment.users as any).role as string
       } : undefined
     };
   }

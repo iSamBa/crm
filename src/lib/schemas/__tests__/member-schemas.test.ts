@@ -343,7 +343,7 @@ describe('Member Schemas', () => {
         expect(result.success).toBe(true)
         
         if (result.success) {
-          expect(result.data.firstName).toBe('John')
+          expect(result.data?.firstName).toBe('John')
         }
       })
 
@@ -358,8 +358,8 @@ describe('Member Schemas', () => {
         
         if (!result.success) {
           expect(result.errors).toBeDefined()
-          expect(result.errors[0].field).toBe('firstName')
-          expect(result.errors[0].message).toBe('First name is required')
+          expect(result.errors?.[0]?.field).toBe('firstName')
+          expect(result.errors?.[0]?.message).toBe('First name is required')
         }
       })
     })

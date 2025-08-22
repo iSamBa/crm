@@ -22,7 +22,7 @@ class UserService extends BaseService {
   /**
    * Get user profile by ID
    */
-  async getUserById(id: string): Promise<ServiceResponse<User>> {
+  async getUserById(id: string): Promise<ServiceResponse<User | null>> {
     return this.executeQuery(
       async () => {
         return this.db
@@ -98,7 +98,7 @@ class UserService extends BaseService {
   /**
    * Update user profile information
    */
-  async updateProfile(userId: string, data: UpdateUserProfileData): Promise<ServiceResponse<User>> {
+  async updateProfile(userId: string, data: UpdateUserProfileData): Promise<ServiceResponse<User | null>> {
     // Validate input data
     const validation = this.validateInput(UpdateUserProfileSchema, data);
     if (validation.error) {
@@ -183,7 +183,7 @@ class UserService extends BaseService {
   /**
    * Get user preferences
    */
-  async getUserPreferences(userId: string): Promise<ServiceResponse<Record<string, unknown>>> {
+  async getUserPreferences(userId: string): Promise<ServiceResponse<Record<string, unknown> | null>> {
     return this.executeQuery(
       async () => {
         return this.db
@@ -203,7 +203,7 @@ class UserService extends BaseService {
   /**
    * Update or create user preferences
    */
-  async updateUserPreferences(userId: string, preferences: Record<string, unknown>): Promise<ServiceResponse<Record<string, unknown>>> {
+  async updateUserPreferences(userId: string, preferences: Record<string, unknown>): Promise<ServiceResponse<Record<string, unknown> | null>> {
     return this.executeMutation(
       async () => {
         const dataToUpsert = {

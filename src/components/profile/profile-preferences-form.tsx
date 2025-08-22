@@ -99,13 +99,13 @@ export function ProfilePreferencesForm({ userId }: ProfilePreferencesFormProps) 
   useEffect(() => {
     if (preferences) {
       reset({
-        emailNotifications: preferences.email_notifications ?? true,
-        smsNotifications: preferences.sms_notifications ?? false,
-        sessionReminders: preferences.session_reminders ?? true,
-        marketingEmails: preferences.marketing_emails ?? false,
+        emailNotifications: Boolean(preferences.email_notifications ?? true),
+        smsNotifications: Boolean(preferences.sms_notifications ?? false),
+        sessionReminders: Boolean(preferences.session_reminders ?? true),
+        marketingEmails: Boolean(preferences.marketing_emails ?? false),
         theme: (preferences.theme as 'light' | 'dark') ?? 'light',
-        language: preferences.language ?? 'en',
-        timezone: preferences.timezone ?? 'America/New_York'
+        language: String(preferences.language ?? 'en'),
+        timezone: String(preferences.timezone ?? 'America/New_York')
       });
     }
   }, [preferences, reset]);

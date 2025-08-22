@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { useMembershipPlans, useSubscriptionActions } from '@/lib/hooks/use-subscriptions';
 import { useMembers } from '@/lib/hooks/use-members';
 import { subscriptionService, SubscriptionWithMember } from '@/lib/services/subscription-service';
+import { Member } from '@/types';
 import { Check, User } from 'lucide-react';
 import { shortDate } from '@/lib/utils/date-formatting';
 
@@ -51,7 +52,7 @@ export function SubscriptionForm({ memberId, subscription, onSuccess }: Subscrip
   const isEditing = !!subscription;
   const [selectedPlanId, setSelectedPlanId] = useState<string>(subscription?.plan?.id || '');
   const { plans, isLoading: plansLoading } = useMembershipPlans();
-  const { members, isLoading: membersLoading } = useMembers({});
+  const { data: members = [], isLoading: membersLoading } = useMembers({});
   const { createSubscription, updateSubscription, isLoading } = useSubscriptionActions();
 
   const form = useForm<SubscriptionFormData>({
@@ -125,7 +126,7 @@ export function SubscriptionForm({ memberId, subscription, onSuccess }: Subscrip
     );
   }
 
-  const selectedMember = members.find(member => member.id === form.watch('memberId'));
+  const selectedMember = members.find((member: Member) => member.id === form.watch('memberId'));
 
   return (
     <Form {...form}>
@@ -156,7 +157,7 @@ export function SubscriptionForm({ memberId, subscription, onSuccess }: Subscrip
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {members.map((member) => (
+                      {members.map((member: Member) => (
                         <SelectItem key={member.id} value={member.id}>
                           <div className="flex items-center gap-2">
                             <div>

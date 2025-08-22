@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useMember } from '@/lib/hooks/use-members-modern';
+import { useMember } from '@/lib/hooks/use-members';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-client';
 import { MemberHeader } from './member-header';

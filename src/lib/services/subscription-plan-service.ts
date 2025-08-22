@@ -91,7 +91,7 @@ class SubscriptionPlanService extends BaseService {
    * Get a single subscription plan by ID
    */
   async getPlanById(id: string): Promise<ServiceResponse<SubscriptionPlan>> {
-    return this.executeQuery(
+    const result = await this.executeQuery(
       async () => this.db
         .from(this.tableName)
         .select('*')
@@ -103,6 +103,16 @@ class SubscriptionPlanService extends BaseService {
         transform: (data: unknown) => this.transformPlanData(data as Record<string, unknown>)
       }
     );
+
+    if (result.error) {
+      return { data: null as any, error: result.error };
+    }
+
+    if (!result.data) {
+      return { data: null as any, error: 'Subscription plan not found' };
+    }
+
+    return { data: result.data, error: null };
   }
 
   /**
@@ -112,12 +122,12 @@ class SubscriptionPlanService extends BaseService {
     // Validate input
     const validation = this.validateInput(CreateSubscriptionPlanSchema, data);
     if (validation.error) {
-      return { data: null, error: validation.error };
+      return { data: null as any, error: validation.error };
     }
 
     const validatedData = validation.data!;
 
-    return this.executeMutation(
+    const result = await this.executeMutation(
       async () => {
         const dbData = this.transformToDbFields(validatedData, this.fieldMap);
         
@@ -137,6 +147,11 @@ class SubscriptionPlanService extends BaseService {
         transform: (data: unknown) => this.transformPlanData(data as Record<string, unknown>)
       }
     );
+
+    return {
+      data: result.data || (null as any),
+      error: result.error
+    };
   }
 
   /**
@@ -146,13 +161,13 @@ class SubscriptionPlanService extends BaseService {
     // Validate input
     const validation = this.validateInput(UpdateSubscriptionPlanSchema, data);
     if (validation.error) {
-      return { data: null, error: validation.error };
+      return { data: null as any, error: validation.error };
     }
 
     const validatedData = validation.data!;
     const { id, ...updateData } = validatedData;
 
-    return this.executeMutation(
+    const result = await this.executeMutation(
       async () => {
         const dbData = this.transformToDbFields(updateData, this.fieldMap);
         
@@ -172,14 +187,19 @@ class SubscriptionPlanService extends BaseService {
         ],
         optimisticUpdate: {
           queryKey: ['subscription-plans', 'list'],
-          updater: (oldData: SubscriptionPlan[]) => 
-            oldData?.map(plan => 
+          updater: (oldData: unknown) => 
+            (oldData as SubscriptionPlan[])?.map(plan => 
               plan.id === id ? { ...plan, ...updateData } : plan
             ) || []
         },
         transform: (data: unknown) => this.transformPlanData(data as Record<string, unknown>)
       }
     );
+
+    return {
+      data: result.data || (null as any),
+      error: result.error
+    };
   }
 
   /**
@@ -224,8 +244,8 @@ class SubscriptionPlanService extends BaseService {
         ],
         optimisticUpdate: {
           queryKey: ['subscription-plans', 'list'],
-          updater: (oldData: SubscriptionPlan[]) => 
-            oldData?.filter(plan => plan.id !== id) || []
+          updater: (oldData: unknown) => 
+            (oldData as SubscriptionPlan[])?.filter(plan => plan.id !== id) || []
         }
       }
     ).then(result => ({
@@ -238,7 +258,7 @@ class SubscriptionPlanService extends BaseService {
    * Toggle plan active status
    */
   async togglePlanStatus(id: string, isActive: boolean): Promise<ServiceResponse<SubscriptionPlan>> {
-    return this.executeMutation(
+    const result = await this.executeMutation(
       async () => this.db
         .from(this.tableName)
         .update({ 
@@ -256,14 +276,19 @@ class SubscriptionPlanService extends BaseService {
         ],
         optimisticUpdate: {
           queryKey: ['subscription-plans', 'list'],
-          updater: (oldData: SubscriptionPlan[]) => 
-            oldData?.map(plan => 
+          updater: (oldData: unknown) => 
+            (oldData as SubscriptionPlan[])?.map(plan => 
               plan.id === id ? { ...plan, isActive } : plan
             ) || []
         },
         transform: (data: unknown) => this.transformPlanData(data as Record<string, unknown>)
       }
     );
+
+    return {
+      data: result.data || (null as any),
+      error: result.error
+    };
   }
 
   /**

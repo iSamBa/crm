@@ -3,10 +3,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { DollarSign, TrendingUp, Clock, FileText, Camera, Activity, Plus } from 'lucide-react';
-import { Member } from '@/types';
+import { Member, Subscription } from '@/types';
 import { SubscriptionForm } from '@/components/subscriptions/subscription-form';
 import { SubscriptionList } from '@/components/subscriptions/subscription-list';
 import { MemberSessionsList } from './member-sessions-list';
+import { SubscriptionWithMember } from '@/lib/services/subscription-service';
 
 interface MemberTabsProps {
   member: Member;
@@ -15,10 +16,19 @@ interface MemberTabsProps {
 
 export function MemberTabs({ member, onSubscriptionUpdated }: MemberTabsProps) {
   const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
 
   const handleSubscriptionSuccess = () => {
     setIsSubscriptionDialogOpen(false);
+    setIsEditDialogOpen(false);
+    setEditingSubscription(null);
     onSubscriptionUpdated();
+  };
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    setEditingSubscription(subscription);
+    setIsEditDialogOpen(true);
   };
 
   return (
@@ -74,7 +84,27 @@ export function MemberTabs({ member, onSubscriptionUpdated }: MemberTabsProps) {
             </DialogContent>
           </Dialog>
         </div>
-        <SubscriptionList memberId={member.id} />
+
+        {/* Edit Subscription Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="w-[50vw] max-w-[50vw] min-w-[1200px] h-[95vh] overflow-y-auto p-6" style={{ width: '50vw', maxWidth: '50vw' }}>
+            <DialogHeader>
+              <DialogTitle>Edit Subscription</DialogTitle>
+              <DialogDescription>
+                Modify the subscription for {member.firstName} {member.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            {editingSubscription && (
+              <SubscriptionForm 
+                memberId={member.id} 
+                subscription={editingSubscription as SubscriptionWithMember}
+                onSuccess={handleSubscriptionSuccess}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <SubscriptionList memberId={member.id} onEdit={handleEditSubscription} />
       </TabsContent>
 
       <TabsContent value="payments" className="space-y-4">

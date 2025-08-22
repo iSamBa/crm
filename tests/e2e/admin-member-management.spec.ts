@@ -24,7 +24,7 @@ test.describe('Admin Member Management', () => {
     
     // Check for member list items
     const memberRows = page.locator('[data-testid="member-row"]')
-    await expect(memberRows).toHaveCount.greaterThan(0)
+    expect(await memberRows.count()).toBeGreaterThan(0)
 
     // Verify table headers
     await expect(page.locator('th:has-text("Name")')).toBeVisible()

@@ -11,12 +11,11 @@ export const handlers = [
   }),
 
   http.post('/api/members', async ({ request }) => {
-    const body = await request.json()
+    const body = await request.json() as Record<string, any>
     const newMember = {
       id: `member-${Date.now()}`,
       ...body,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     }
     return HttpResponse.json({ data: newMember })
   }),
@@ -33,7 +32,7 @@ export const handlers = [
   }),
 
   http.put('/api/members/:id', async ({ params, request }) => {
-    const body = await request.json()
+    const body = await request.json() as Record<string, any>
     const memberIndex = mockMembers.findIndex(m => m.id === params.id)
     if (memberIndex === -1) {
       return HttpResponse.json(
@@ -44,7 +43,6 @@ export const handlers = [
     const updatedMember = {
       ...mockMembers[memberIndex],
       ...body,
-      updatedAt: new Date().toISOString(),
     }
     return HttpResponse.json({ data: updatedMember })
   }),
@@ -87,13 +85,12 @@ export const handlers = [
   }),
 
   http.post('/api/sessions', async ({ request }) => {
-    const body = await request.json()
+    const body = await request.json() as Record<string, any>
     const newSession = {
       id: `session-${Date.now()}`,
       ...body,
       status: 'scheduled',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     }
     return HttpResponse.json({ data: newSession })
   }),
@@ -124,8 +121,8 @@ export const handlers = [
 
   // Auth API
   http.post('/auth/v1/token', async ({ request }) => {
-    const body = await request.json()
-    if (body.email === 'admin@fitness.com' && body.password === 'password123') {
+    const body = await request.json() as Record<string, any>
+    if (body?.email === 'admin@fitness.com' && body?.password === 'password123') {
       return HttpResponse.json({
         access_token: 'mock-access-token',
         user: {

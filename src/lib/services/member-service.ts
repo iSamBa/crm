@@ -76,12 +76,12 @@ class MemberService extends BaseService {
           this.invalidate.members.lists,
           this.invalidate.members.stats
         ],
-        transform: (data) => this.transformMemberData(data)
+        transform: (data) => this.transformMemberData(data as Record<string, unknown>)
       }
     );
 
     return {
-      data: result.data ? this.transformMemberData(result.data) : null,
+      data: result.data || null,
       error: result.error
     };
   }
@@ -101,7 +101,7 @@ class MemberService extends BaseService {
       {
         logQuery: `Fetching member ${id}`,
         transform: (data) => {
-          const transformed = this.transformMemberData(data);
+          const transformed = this.transformMemberData(data as Record<string, unknown>);
           return transformed;
         }
       }
@@ -190,14 +190,14 @@ class MemberService extends BaseService {
         ],
         optimisticUpdate: {
           queryKey: queryKeys.members.detail(id),
-          updater: (oldData: Member) => ({ ...oldData, ...updateFields })
+          updater: (oldData: unknown) => ({ ...(oldData as Member), ...updateFields })
         },
-        transform: (data) => this.transformMemberData(data)
+        transform: (data) => this.transformMemberData(data as Record<string, unknown>)
       }
     );
 
     return {
-      data: result.data ? this.transformMemberData(result.data) : null,
+      data: result.data || null,
       error: result.error
     };
   }
@@ -434,7 +434,7 @@ class MemberService extends BaseService {
         ],
         optimisticUpdate: {
           queryKey: queryKeys.members.detail(id),
-          updater: (oldData: Member) => ({ ...oldData, membershipStatus: status })
+          updater: (oldData: unknown) => ({ ...(oldData as Member), membershipStatus: status })
         }
       }
     );
@@ -452,19 +452,19 @@ class MemberService extends BaseService {
     }
 
     return {
-      id: dbMember.id || '',
-      firstName: dbMember.first_name || '',
-      lastName: dbMember.last_name || '',
-      email: dbMember.email || null,
-      phone: dbMember.phone || null,
-      membershipStatus: dbMember.membership_status || 'active',
-      emergencyContact: dbMember.emergency_contact || null,
-      medicalConditions: dbMember.medical_conditions || null,
-      fitnessGoals: dbMember.fitness_goals || null,
-      preferredTrainingTimes: dbMember.preferred_training_times || [],
-      joinDate: dbMember.join_date || new Date().toISOString().split('T')[0],
-      createdAt: dbMember.created_at || new Date().toISOString(),
-      updatedAt: dbMember.updated_at || new Date().toISOString(),
+      id: (dbMember.id as string) || '',
+      firstName: (dbMember.first_name as string) || '',
+      lastName: (dbMember.last_name as string) || '',
+      email: (dbMember.email as string) || undefined,
+      phone: (dbMember.phone as string) || undefined,
+      membershipStatus: (dbMember.membership_status as 'active' | 'inactive' | 'frozen' | 'cancelled') || 'active',
+      emergencyContact: (dbMember.emergency_contact as { name: string; phone: string; relationship: string } | null) || undefined,
+      medicalConditions: (dbMember.medical_conditions as string) || undefined,
+      fitnessGoals: (dbMember.fitness_goals as string) || undefined,
+      preferredTrainingTimes: (dbMember.preferred_training_times as string[]) || [],
+      joinDate: (dbMember.join_date as string) || new Date().toISOString().split('T')[0],
+      createdAt: (dbMember.created_at as string) || new Date().toISOString(),
+      updatedAt: (dbMember.updated_at as string) || new Date().toISOString(),
     };
   }
 

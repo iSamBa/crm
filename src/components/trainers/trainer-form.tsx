@@ -145,7 +145,7 @@ export function TrainerForm({ trainer, onSuccess }: TrainerFormProps) {
               />
               {form.formState.errors.firstName && (
                 <p className="text-sm text-red-600 mt-1">
-                  {form.formState.errors.firstName?.message}
+                  {typeof form.formState.errors.firstName?.message === 'string' ? form.formState.errors.firstName.message : 'Invalid input'}
                 </p>
               )}
             </div>
@@ -159,7 +159,7 @@ export function TrainerForm({ trainer, onSuccess }: TrainerFormProps) {
               />
               {form.formState.errors.lastName && (
                 <p className="text-sm text-red-600 mt-1">
-                  {form.formState.errors.lastName?.message}
+                  {typeof form.formState.errors.lastName?.message === 'string' ? form.formState.errors.lastName.message : 'Invalid input'}
                 </p>
               )}
             </div>
@@ -176,7 +176,7 @@ export function TrainerForm({ trainer, onSuccess }: TrainerFormProps) {
             />
             {form.formState.errors.email && (
               <p className="text-sm text-red-600 mt-1">
-                {form.formState.errors.email?.message}
+                {typeof form.formState.errors.email?.message === 'string' ? form.formState.errors.email.message : 'Invalid input'}
               </p>
             )}
             {isEditing && (
@@ -208,7 +208,7 @@ export function TrainerForm({ trainer, onSuccess }: TrainerFormProps) {
               </div>
               {form.formState.errors.password && (
                 <p className="text-sm text-red-600 mt-1">
-                  {form.formState.errors.password?.message}
+                  {typeof form.formState.errors.password?.message === 'string' ? form.formState.errors.password.message : 'Invalid input'}
                 </p>
               )}
               <p className="text-sm text-gray-600 mt-1">
@@ -227,7 +227,7 @@ export function TrainerForm({ trainer, onSuccess }: TrainerFormProps) {
               />
               {form.formState.errors.phone && (
                 <p className="text-sm text-red-600 mt-1">
-                  {form.formState.errors.phone?.message}
+                  {typeof form.formState.errors.phone?.message === 'string' ? form.formState.errors.phone.message : 'Invalid input'}
                 </p>
               )}
             </div>
@@ -245,7 +245,7 @@ export function TrainerForm({ trainer, onSuccess }: TrainerFormProps) {
               />
               {form.formState.errors.hourlyRate && (
                 <p className="text-sm text-red-600 mt-1">
-                  {form.formState.errors.hourlyRate?.message}
+                  {typeof form.formState.errors.hourlyRate?.message === 'string' ? form.formState.errors.hourlyRate.message : 'Invalid input'}
                 </p>
               )}
             </div>

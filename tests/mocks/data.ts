@@ -67,10 +67,10 @@ export const mockTrainers: Trainer[] = [
     lastName: 'Thompson',
     email: 'trainer@fitness.com',
     phone: '+1-555-1001',
+    role: 'trainer' as const,
     specializations: ['Weight Training', 'Cardio', 'Nutrition'],
     certifications: ['NASM-CPT', 'Nutrition Specialist'],
     hourlyRate: 75,
-    isActive: true,
     availability: {
       monday: [{ start: '09:00', end: '17:00' }],
       tuesday: [{ start: '09:00', end: '17:00' }],

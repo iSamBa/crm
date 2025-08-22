@@ -61,6 +61,8 @@ export const queryKeys = {
   // Subscriptions
   subscriptions: {
     all: ['subscriptions'] as const,
+    lists: () => [...queryKeys.subscriptions.all, 'list'] as const,
+    list: (filters?: any) => [...queryKeys.subscriptions.lists(), filters] as const,
     plans: () => [...queryKeys.subscriptions.all, 'plans'] as const,
     member: (memberId: string) => [...queryKeys.subscriptions.all, 'member', memberId] as const,
     stats: () => [...queryKeys.subscriptions.all, 'stats'] as const,
@@ -110,6 +112,7 @@ export const invalidateQueries = {
   },
   subscriptions: {
     all: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.all }),
+    lists: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.lists() }),
     plans: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.plans() }),
     member: (memberId: string) => queryClient.invalidateQueries({ 
       queryKey: queryKeys.subscriptions.member(memberId) 

@@ -28,17 +28,19 @@ import {
   X,
   Calendar,
   DollarSign,
-  RefreshCw
+  RefreshCw,
+  Edit
 } from 'lucide-react';
 import { useMemberSubscriptionsModern, useSubscriptionActions } from '@/lib/hooks/use-subscriptions';
 import { shortDate } from '@/lib/utils/date-formatting';
-import { Subscription } from '@/lib/services/subscription-service';
+import { Subscription } from '@/types';
 
 interface SubscriptionListProps {
   memberId: string;
+  onEdit?: (subscription: Subscription) => void;
 }
 
-export function SubscriptionList({ memberId }: SubscriptionListProps) {
+export function SubscriptionList({ memberId, onEdit }: SubscriptionListProps) {
   const { data: subscriptions = [], isLoading, refetch } = useMemberSubscriptionsModern(memberId);
   const { 
     cancelSubscription, 
@@ -182,6 +184,18 @@ export function SubscriptionList({ memberId }: SubscriptionListProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
+                      {/* Edit button - always available for non-expired subscriptions */}
+                      {subscription.status !== 'expired' && onEdit && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEdit(subscription)}
+                          title="Edit subscription"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
                       {subscription.status === 'active' && (
                         <>
                           <Button

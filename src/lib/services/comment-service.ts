@@ -9,12 +9,12 @@ export class CommentService extends BaseService {
    */
   async getSessionComments(sessionId: string): Promise<ServiceResponse<SessionComment[]>> {
     if (!sessionId) {
-      return { data: null, error: 'Session ID is required' };
+      return { data: [], error: 'Session ID is required' };
     }
 
-    return this.executeQuery(
+    const result = await this.executeQuery(
       async () => {
-        const result = await this.db
+        const queryResult = await this.db
           .from('session_comments')
           .select(`
             *,
@@ -25,15 +25,20 @@ export class CommentService extends BaseService {
           .eq('session_id', sessionId)
           .order('created_at', { ascending: true });
         
-        return result;
+        return queryResult;
       },
       'Failed to fetch session comments',
       {
         logQuery: `Fetching comments for session ${sessionId}`,
         allowEmpty: true,
-        transform: (data) => data?.map((comment: unknown) => this.transformCommentData(comment as Record<string, unknown>)) || []
+        transform: (data) => (data as unknown[])?.map((comment: unknown) => this.transformCommentData(comment as Record<string, unknown>)) || []
       }
     );
+
+    return {
+      data: result.data || [],
+      error: result.error
+    };
   }
 
   /**
@@ -72,7 +77,7 @@ export class CommentService extends BaseService {
       'Failed to add comment',
       {
         logOperation: `Adding comment to session ${validatedData.sessionId}`,
-        transform: (data) => this.transformCommentData(data),
+        transform: (data) => this.transformCommentData(data as Record<string, unknown>),
         invalidateQueries: [
           () => this.invalidate.sessionComments.session(validatedData.sessionId),
           () => this.invalidate.sessions.all()
@@ -116,7 +121,7 @@ export class CommentService extends BaseService {
       'Failed to update comment',
       {
         logOperation: `Updating comment ${commentId}`,
-        transform: (data) => this.transformCommentData(data),
+        transform: (data) => this.transformCommentData(data as Record<string, unknown>),
         invalidateQueries: [
           () => this.invalidate.sessionComments.all(),
           () => this.invalidate.sessions.all()
@@ -133,25 +138,30 @@ export class CommentService extends BaseService {
       return { data: false, error: 'Comment ID is required' };
     }
 
-    return this.executeMutation(
+    const result = await this.executeMutation(
       async () => {
-        const result = await this.db
+        const deleteResult = await this.db
           .from('session_comments')
           .delete()
           .eq('id', commentId);
         
-        return result;
+        return deleteResult;
       },
       'Failed to delete comment',
       {
         logOperation: `Deleting comment ${commentId}`,
-        transform: () => true,
+        transform: () => true as boolean,
         invalidateQueries: [
           () => this.invalidate.sessionComments.all(),
           () => this.invalidate.sessions.all()
         ]
       }
     );
+
+    return {
+      data: result.data !== null ? true : false,
+      error: result.error
+    };
   }
 
   /**
@@ -159,18 +169,18 @@ export class CommentService extends BaseService {
    */
   private transformCommentData(dbComment: Record<string, unknown>): SessionComment {
     return {
-      id: dbComment.id,
-      sessionId: dbComment.session_id,
-      userId: dbComment.user_id,
-      comment: dbComment.comment,
-      commentType: dbComment.comment_type,
-      isPrivate: dbComment.is_private,
-      createdAt: dbComment.created_at,
-      updatedAt: dbComment.updated_at,
+      id: dbComment.id as string,
+      sessionId: dbComment.session_id as string,
+      userId: dbComment.user_id as string,
+      comment: dbComment.comment as string,
+      commentType: dbComment.comment_type as 'note' | 'progress' | 'issue' | 'goal' | 'equipment' | 'feedback' | 'reminder',
+      isPrivate: dbComment.is_private as boolean,
+      createdAt: dbComment.created_at as string,
+      updatedAt: dbComment.updated_at as string,
       user: dbComment.users ? {
-        firstName: dbComment.users.first_name,
-        lastName: dbComment.users.last_name,
-        role: dbComment.users.role
+        firstName: (dbComment.users as any).first_name as string,
+        lastName: (dbComment.users as any).last_name as string,
+        role: (dbComment.users as any).role as string
       } : undefined
     };
   }

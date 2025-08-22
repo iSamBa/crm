@@ -43,7 +43,7 @@ import {
 import { useSessionActions, useConflictCheck } from '@/lib/hooks/use-sessions';
 import { useMembers } from '@/lib/hooks/use-members';
 import { useTrainers } from '@/lib/hooks/use-trainers';
-import { TrainingSession } from '@/types';
+import { TrainingSession, Member } from '@/types';
 import { CreateSessionData } from '@/lib/services/session-service';
 import { 
   calculateDurationBetweenDates, 
@@ -94,7 +94,7 @@ export function SessionModal({
   
   const { createSession, updateSession, isLoading } = useSessionActions();
   const { checkConflicts, isChecking } = useConflictCheck();
-  const { members } = useMembers(); // Remove searchTerm from here to prevent infinite loop
+  const { data: members = [] } = useMembers(); // Remove searchTerm from here to prevent infinite loop
   const { trainers, isLoading: trainersLoading, error: trainersError } = useTrainers();
 
   const isEditing = !!session;
@@ -265,7 +265,7 @@ export function SessionModal({
     if (!memberSearch.trim()) {
       return members;
     }
-    return members.filter(member =>
+    return members.filter((member: Member) =>
       `${member.firstName} ${member.lastName}`.toLowerCase().includes(memberSearch.toLowerCase()) ||
       member.email?.toLowerCase().includes(memberSearch.toLowerCase())
     );
@@ -491,7 +491,7 @@ export function SessionModal({
                                   <SelectValue placeholder="Select a member" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {filteredMembers.map((member) => (
+                                  {filteredMembers.map((member: Member) => (
                                     <SelectItem key={member.id} value={member.id}>
                                       {member.firstName} {member.lastName}
                                       {member.email && (

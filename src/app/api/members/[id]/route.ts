@@ -3,10 +3,11 @@ import { memberService } from '@/lib/services/member-service';
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { data: member, error } = await memberService.getMemberById(params.id);
+    const { id } = await params;
+    const { data: member, error } = await memberService.getMemberById(id);
 
     if (error) {
       return NextResponse.json(
@@ -27,11 +28,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
-    const updateData = { ...body, id: params.id };
+    const updateData = { ...body, id };
     
     const { data: member, error } = await memberService.updateMember(updateData);
 
@@ -54,10 +56,11 @@ export async function PUT(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { data, error } = await memberService.deleteMember(params.id);
+    const { id } = await params;
+    const { data, error } = await memberService.deleteMember(id);
 
     if (error || !data?.success) {
       return NextResponse.json(

@@ -38,6 +38,8 @@ export interface Trainer extends User {
   availability: {
     [key: string]: { start: string; end: string }[];
   };
+  bio?: string;
+  yearsExperience?: number;
 }
 
 export interface Subscription {
@@ -50,6 +52,8 @@ export interface Subscription {
   autoRenew: boolean;
   price: number;
   createdAt: string;
+  updatedAt: string;
+  plan?: MembershipPlan;
 }
 
 export interface MembershipPlan {
@@ -63,6 +67,7 @@ export interface MembershipPlan {
   includesPersonalTraining: boolean;
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export type SubscriptionPlan = MembershipPlan;
@@ -119,6 +124,7 @@ export interface TrainingSession {
   memberRating?: number; // 1-5
   trainerRating?: number; // 1-5
   createdAt: string;
+  updatedAt: string;
   
   // Related data (populated when needed)
   member?: {
