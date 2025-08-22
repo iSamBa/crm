@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-client';
+import { Subscription, MembershipPlan } from '@/types';
 import { 
   subscriptionService, 
-  Subscription, 
-  MembershipPlan, 
   CreateSubscriptionData, 
   UpdateSubscriptionData,
   SubscriptionWithMember,
@@ -26,7 +25,7 @@ export function useMembershipPlans() {
     if (fetchError) {
       setError(fetchError);
     } else {
-      setPlans(data);
+      setPlans(data || []);
     }
     
     setIsLoading(false);
@@ -213,4 +212,16 @@ export function useSubscriptionStats() {
     error,
     refetch: fetchStats
   };
+}
+
+// Modern TanStack Query version for all subscriptions with filtering
+export function useAllSubscriptionsModern(filters?: SubscriptionFilters) {
+  return useQuery({
+    queryKey: queryKeys.subscriptions.list(filters),
+    queryFn: () => subscriptionService.getAllSubscriptions(filters),
+    select: (data) => data.data || [],
+    meta: { errorMessage: 'Failed to load subscriptions' },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,   // 10 minutes
+  });
 }

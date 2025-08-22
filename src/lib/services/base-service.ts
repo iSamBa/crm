@@ -36,8 +36,23 @@ export abstract class BaseService {
    * Enhanced error handling with detailed information
    */
   protected handleError(error: unknown, defaultMessage: string): string {
+    // Type guard for error objects with code property
+    const isErrorWithCode = (err: unknown): err is { code: string; message?: string } => {
+      return err != null && typeof err === 'object' && 'code' in err;
+    };
+
+    // Type guard for error objects with message property
+    const isErrorWithMessage = (err: unknown): err is { message: string } => {
+      return err != null && typeof err === 'object' && 'message' in err;
+    };
+
+    // Type guard for error objects with name property
+    const isErrorWithName = (err: unknown): err is { name: string } => {
+      return err != null && typeof err === 'object' && 'name' in err;
+    };
+
     // Supabase specific errors
-    if (error?.code) {
+    if (isErrorWithCode(error)) {
       switch (error.code) {
         case 'PGRST116':
           return 'The requested resource does not exist';
@@ -53,7 +68,7 @@ export abstract class BaseService {
     }
 
     // Network errors
-    if (error?.name === 'NetworkError') {
+    if (isErrorWithName(error) && error.name === 'NetworkError') {
       return 'Network connection failed. Please check your internet connection.';
     }
 
@@ -63,7 +78,7 @@ export abstract class BaseService {
       return `${firstError.path.join('.')}: ${firstError.message}`;
     }
 
-    if (error?.message) {
+    if (isErrorWithMessage(error)) {
       return error.message;
     }
     if (typeof error === 'string') {

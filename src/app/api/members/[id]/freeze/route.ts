@@ -3,10 +3,11 @@ import { memberService } from '@/lib/services/member-service';
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { data, error } = await memberService.freezeMembership(params.id);
+    const { id } = await params;
+    const { data, error } = await memberService.freezeMembership(id);
 
     if (error || !data?.success) {
       return NextResponse.json(
@@ -30,10 +31,11 @@ export async function POST(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { data, error } = await memberService.unfreezeMembership(params.id);
+    const { id } = await params;
+    const { data, error } = await memberService.unfreezeMembership(id);
 
     if (error || !data?.success) {
       return NextResponse.json(

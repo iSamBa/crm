@@ -154,7 +154,7 @@ class TrainerService extends BaseService {
       'Failed to fetch trainer',
       {
         logQuery: `Fetching trainer ${id}`,
-        transform: (data) => this.transformTrainerData(data)
+        transform: (data) => this.transformTrainerData(data as Record<string, unknown>)
       }
     );
 
@@ -174,7 +174,7 @@ class TrainerService extends BaseService {
     }
 
     const result = await this.executeQuery(
-      async () => {
+      (async () => {
         try {
           // First, try to get trainers with user data join
           let query = this.db
@@ -230,7 +230,7 @@ class TrainerService extends BaseService {
             throw error;
           }
 
-          return { data: data || [], error: null };
+          return { data: data || [], error: null as unknown };
 
         } catch {
           // Fallback to users table only
@@ -251,13 +251,15 @@ class TrainerService extends BaseService {
               certifications: [],
               hourly_rate: 50,
               availability: {},
-              users: userRecord
+              bio: undefined,
+              years_experience: undefined,
+              users: [userRecord]
             };
           });
 
-          return { data: trainers, error: null };
+          return { data: trainers, error: null as unknown };
         }
-      },
+      }) as any,
       'Failed to fetch trainers',
       {
         logQuery: `Fetching trainers with filters: ${JSON.stringify(filters)}`,
@@ -266,7 +268,7 @@ class TrainerService extends BaseService {
     );
 
     return {
-      data: result.data ? (result.data || []).map((trainer: unknown) => this.transformTrainerData(trainer as Record<string, unknown>)) : [],
+      data: result.data ? (result.data as unknown[] || []).map((trainer: unknown) => this.transformTrainerData(trainer as Record<string, unknown>)) : [],
       error: result.error
     };
   }
@@ -469,14 +471,16 @@ class TrainerService extends BaseService {
       role: 'trainer',
       firstName: (users.first_name as string) || '',
       lastName: (users.last_name as string) || '',
-      phone: (users.phone as string) || null,
-      avatar: (users.avatar as string) || null,
+      phone: (users.phone as string) || undefined,
+      avatar: (users.avatar as string) || undefined,
       createdAt: (users.created_at as string) || new Date().toISOString(),
       updatedAt: (users.updated_at as string) || new Date().toISOString(),
       specializations: (dbTrainer.specializations as string[]) || ['General Training'],
       certifications: (dbTrainer.certifications as string[]) || [],
       hourlyRate: (dbTrainer.hourly_rate as number) || 50,
-      availability: (dbTrainer.availability as { [key: string]: { start: string; end: string }[] }) || {}
+      availability: (dbTrainer.availability as { [key: string]: { start: string; end: string }[] }) || {},
+      bio: (dbTrainer.bio as string) || undefined,
+      yearsExperience: (dbTrainer.years_experience as number) || undefined,
     };
   }
 

@@ -48,6 +48,7 @@ type MemberFormData = z.infer<typeof memberSchema>;
 interface MemberFormProps {
   member?: Member;
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
 export function MemberForm({ member, onSuccess }: MemberFormProps) {
@@ -240,7 +241,7 @@ export function MemberForm({ member, onSuccess }: MemberFormProps) {
             value={membershipStatus}
             onValueChange={(value) => setValue('membershipStatus', value as 'active' | 'inactive' | 'frozen' | 'cancelled')}
           >
-            <SelectTrigger>
+            <SelectTrigger id="membershipStatus">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

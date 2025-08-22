@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { useMemberStats, useRecentMemberActivities } from '@/lib/hooks/use-members-modern';
+import { useMemberStats, useRecentMemberActivities } from '@/lib/hooks/use-members';
+import { Activity as ActivityType } from '@/types';
 
 export default function MemberDashboard() {
   const { data: stats, isLoading: statsLoading } = useMemberStats();
@@ -105,7 +106,7 @@ export default function MemberDashboard() {
                   No recent activities
                 </p>
               ) : (
-                recentActivities.map((activity, index) => (
+                recentActivities.map((activity: ActivityType, index: number) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <UserPlus className="h-5 w-5 text-primary" />

@@ -1,4 +1,4 @@
-# Fitness Studio CRM
+# CRM
 
 A modern, comprehensive Customer Relationship Management system designed specifically for fitness studios. Built with React 18+, TypeScript, Next.js, and Supabase.
 
@@ -81,7 +81,7 @@ A modern, comprehensive Customer Relationship Management system designed specifi
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd fitness-studio-crm
+   cd crm
    ```
 
 2. **Install dependencies**

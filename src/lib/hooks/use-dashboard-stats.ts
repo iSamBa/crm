@@ -139,7 +139,7 @@ export function useRecentActivities(limit = 10) {
       const allActivities = [
         ...(memberActivities || []),
         ...sessionActivities
-      ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      ].sort((a, b) => new Date(b.timestamp as string).getTime() - new Date(a.timestamp as string).getTime())
        .slice(0, limit);
 
       return allActivities;

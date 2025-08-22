@@ -1,5 +1,49 @@
 import { QueryClient } from '@tanstack/react-query';
 
+// Type definitions for query filters and errors
+type QueryError = {
+  status?: number;
+  message?: string;
+};
+
+type MemberFilters = {
+  status?: string;
+  search?: string;
+  subscription_status?: string;
+};
+
+type SessionFilters = {
+  status?: string;
+  trainer_id?: string;
+  member_id?: string;
+  date_range?: { start: string; end: string };
+};
+
+type SubscriptionFilters = {
+  status?: string;
+  plan_id?: string;
+  member_id?: string;
+};
+
+type SubscriptionPlanFilters = {
+  isActive?: boolean;
+  status?: string;
+  duration?: string;
+  search?: string;
+  priceMin?: number;
+  priceMax?: number;
+  includesPersonalTraining?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+};
+
+type TrainerFilters = {
+  status?: string;
+  specialization?: string;
+  search?: string;
+};
+
+
 // Global query client configuration with modern defaults
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -7,7 +51,7 @@ export const queryClient = new QueryClient({
       // Modern caching strategy
       staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
       gcTime: 10 * 60 * 1000,   // 10 minutes - garbage collection time
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: QueryError) => {
         // Smart retry logic
         if (error?.status === 404 || error?.status === 401) {
           return false; // Don't retry for these errors
@@ -20,7 +64,7 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       retry: 1, // Single retry for mutations
-      onError: (error: any) => {
+      onError: (error: QueryError) => {
         console.error('Mutation error:', error);
         // TODO: Add global toast notification here
       },
@@ -34,7 +78,7 @@ export const queryKeys = {
   members: {
     all: ['members'] as const,
     lists: () => [...queryKeys.members.all, 'list'] as const,
-    list: (filters?: any) => [...queryKeys.members.lists(), filters] as const,
+    list: (filters?: MemberFilters) => [...queryKeys.members.lists(), filters] as const,
     details: () => [...queryKeys.members.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.members.details(), id] as const,
     stats: () => [...queryKeys.members.all, 'stats'] as const,
@@ -46,21 +90,23 @@ export const queryKeys = {
   sessions: {
     all: ['sessions'] as const,
     lists: () => [...queryKeys.sessions.all, 'list'] as const,
-    calendar: (startDate: string, endDate: string, filters?: any) => 
+    calendar: (startDate: string, endDate: string, filters?: SessionFilters) => 
       [...queryKeys.sessions.lists(), 'calendar', startDate, endDate, filters] as const,
-    member: (memberId: string, filters?: any) => 
+    member: (memberId: string, filters?: SessionFilters) => 
       [...queryKeys.sessions.lists(), 'member', memberId, filters] as const,
-    trainer: (trainerId: string, filters?: any) => 
+    trainer: (trainerId: string, filters?: SessionFilters) => 
       [...queryKeys.sessions.lists(), 'trainer', trainerId, filters] as const,
     details: () => [...queryKeys.sessions.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.sessions.details(), id] as const,
     comments: (sessionId: string) => [...queryKeys.sessions.all, 'comments', sessionId] as const,
-    stats: (filters?: any) => [...queryKeys.sessions.all, 'stats', filters] as const,
+    stats: (filters?: SessionFilters) => [...queryKeys.sessions.all, 'stats', filters] as const,
   },
   
   // Subscriptions
   subscriptions: {
     all: ['subscriptions'] as const,
+    lists: () => [...queryKeys.subscriptions.all, 'list'] as const,
+    list: (filters?: SubscriptionFilters) => [...queryKeys.subscriptions.lists(), filters] as const,
     plans: () => [...queryKeys.subscriptions.all, 'plans'] as const,
     member: (memberId: string) => [...queryKeys.subscriptions.all, 'member', memberId] as const,
     stats: () => [...queryKeys.subscriptions.all, 'stats'] as const,
@@ -70,7 +116,7 @@ export const queryKeys = {
   subscriptionPlans: {
     all: ['subscription-plans'] as const,
     lists: () => [...queryKeys.subscriptionPlans.all, 'list'] as const,
-    list: (filters?: any) => [...queryKeys.subscriptionPlans.lists(), filters] as const,
+    list: (filters?: SubscriptionPlanFilters) => [...queryKeys.subscriptionPlans.lists(), filters] as const,
     details: () => [...queryKeys.subscriptionPlans.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.subscriptionPlans.details(), id] as const,
     stats: () => [...queryKeys.subscriptionPlans.all, 'stats'] as const,
@@ -79,7 +125,7 @@ export const queryKeys = {
   // Trainers
   trainers: {
     all: ['trainers'] as const,
-    lists: (filters?: any) => [...queryKeys.trainers.all, 'list', filters] as const,
+    lists: (filters?: TrainerFilters) => [...queryKeys.trainers.all, 'list', filters] as const,
     detail: (id: string) => [...queryKeys.trainers.all, 'detail', id] as const,
     availability: (id: string, date?: string) => 
       [...queryKeys.trainers.all, 'availability', id, date] as const,
@@ -110,6 +156,7 @@ export const invalidateQueries = {
   },
   subscriptions: {
     all: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.all }),
+    lists: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.lists() }),
     plans: () => queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions.plans() }),
     member: (memberId: string) => queryClient.invalidateQueries({ 
       queryKey: queryKeys.subscriptions.member(memberId) 
