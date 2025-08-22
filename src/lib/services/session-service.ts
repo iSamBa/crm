@@ -2,6 +2,31 @@ import { supabase } from '@/lib/supabase/client';
 import { TrainingSession, SessionComment, RecurringPattern } from '@/types';
 import { calculateSessionEndTime } from '@/lib/utils/session-utils';
 
+// Database types for proper typing
+type DatabaseMember = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+};
+
+type DatabaseUser = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  role: string;
+};
+
+type DatabaseSession = Record<string, unknown> & {
+  members?: DatabaseMember;
+  users?: DatabaseUser;
+};
+
+type DatabaseComment = Record<string, unknown> & {
+  users?: DatabaseUser;
+};
+
 export interface CreateSessionData {
   memberId: string;
   trainerId: string;
@@ -399,7 +424,7 @@ class SessionService {
   // Helper methods
   // TODO: Implement recurring session creation logic when needed
 
-  private transformSessionData(dbSession: Record<string, unknown>): TrainingSession {
+  private transformSessionData(dbSession: DatabaseSession): TrainingSession {
     return {
       id: dbSession.id as string,
       memberId: dbSession.member_id as string,
@@ -417,7 +442,7 @@ class SessionService {
       sessionGoals: dbSession.session_goals as string | undefined,
       actualStartTime: dbSession.actual_start_time as string | undefined,
       actualEndTime: dbSession.actual_end_time as string | undefined,
-      recurringPattern: dbSession.recurring_pattern as any | undefined,
+      recurringPattern: dbSession.recurring_pattern as RecurringPattern | undefined,
       createdBy: dbSession.created_by as string | undefined,
       preparationNotes: dbSession.preparation_notes as string | undefined,
       completionSummary: dbSession.completion_summary as string | undefined,
@@ -426,21 +451,21 @@ class SessionService {
       createdAt: dbSession.created_at as string,
       updatedAt: dbSession.updated_at as string,
       member: dbSession.members ? {
-        id: (dbSession.members as any).id as string,
-        firstName: (dbSession.members as any).first_name as string,
-        lastName: (dbSession.members as any).last_name as string,
-        email: (dbSession.members as any).email as string | undefined
+        id: dbSession.members.id,
+        firstName: dbSession.members.first_name,
+        lastName: dbSession.members.last_name,
+        email: dbSession.members.email
       } : undefined,
       trainer: dbSession.users ? {
-        id: (dbSession.users as any).id as string,
-        firstName: (dbSession.users as any).first_name as string,
-        lastName: (dbSession.users as any).last_name as string,
-        email: (dbSession.users as any).email as string | undefined
+        id: dbSession.users.id,
+        firstName: dbSession.users.first_name,
+        lastName: dbSession.users.last_name,
+        email: dbSession.users.email
       } : undefined
     };
   }
 
-  private transformCommentData(dbComment: Record<string, unknown>): SessionComment {
+  private transformCommentData(dbComment: DatabaseComment): SessionComment {
     return {
       id: dbComment.id as string,
       sessionId: dbComment.session_id as string,
@@ -451,9 +476,9 @@ class SessionService {
       createdAt: dbComment.created_at as string,
       updatedAt: dbComment.updated_at as string,
       user: dbComment.users ? {
-        firstName: (dbComment.users as any).first_name as string,
-        lastName: (dbComment.users as any).last_name as string,
-        role: (dbComment.users as any).role as string
+        firstName: dbComment.users.first_name,
+        lastName: dbComment.users.last_name,
+        role: dbComment.users.role
       } : undefined
     };
   }

@@ -14,6 +14,7 @@ import {
 import Link from 'next/link';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { useMemberStats, useRecentMemberActivities } from '@/lib/hooks/use-members';
+import { Activity as ActivityType } from '@/types';
 
 export default function MemberDashboard() {
   const { data: stats, isLoading: statsLoading } = useMemberStats();
@@ -105,16 +106,16 @@ export default function MemberDashboard() {
                   No recent activities
                 </p>
               ) : (
-                recentActivities.map((activity: any, index: number) => (
+                recentActivities.map((activity: ActivityType, index: number) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <UserPlus className="h-5 w-5 text-primary" />
                       <div>
-                        <p className="font-medium">{String(activity.title)}</p>
-                        <p className="text-sm text-muted-foreground">{String(activity.description)}</p>
+                        <p className="font-medium">{activity.title}</p>
+                        <p className="text-sm text-muted-foreground">{activity.description}</p>
                       </div>
                     </div>
-                    <Badge variant="secondary">{String(activity.time)}</Badge>
+                    <Badge variant="secondary">{activity.time}</Badge>
                   </div>
                 ))
               )}

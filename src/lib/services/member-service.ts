@@ -1,5 +1,5 @@
 import { BaseService, ServiceResponse } from './base-service';
-import { Member } from '@/types';
+import { Member, Activity } from '@/types';
 import { 
   arrayToCSV, 
   downloadCSV, 
@@ -369,7 +369,7 @@ class MemberService extends BaseService {
   }
 
   // Get recent member activities with caching
-  async getRecentMemberActivities(limit = 10): Promise<ServiceResponse<Record<string, unknown>[]>> {
+  async getRecentMemberActivities(limit = 10): Promise<ServiceResponse<Activity[]>> {
     return this.executeQuery(
       async () => {
         const result = await this.db

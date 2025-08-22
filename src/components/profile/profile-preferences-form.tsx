@@ -136,7 +136,7 @@ export function ProfilePreferencesForm({ userId }: ProfilePreferencesFormProps) 
     }
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: UserPreferencesData) => {
     updatePreferencesMutation.mutate(data);
   };
 
@@ -219,7 +219,7 @@ export function ProfilePreferencesForm({ userId }: ProfilePreferencesFormProps) 
             <div className="space-y-2">
               <Label htmlFor="theme">Theme</Label>
               <Select 
-                onValueChange={(value) => setValue('theme', value as any)}
+                onValueChange={(value) => setValue('theme', value as 'light' | 'dark')}
                 defaultValue={watchedTheme}
               >
                 <SelectTrigger>

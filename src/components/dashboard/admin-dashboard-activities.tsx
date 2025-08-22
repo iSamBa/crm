@@ -9,6 +9,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { useRecentActivities } from '@/lib/hooks/use-dashboard-stats';
+import { Activity } from '@/types';
+
 
 // Client Component for real-time activity feed
 export function AdminDashboardActivities() {
@@ -50,18 +52,18 @@ export function AdminDashboardActivities() {
           </div>
         ) : (
           <div className="space-y-4">
-            {activities.map((activity: any, index: number) => {
+            {activities.map((activity: Activity, index: number) => {
               const { icon: IconComponent, color } = getActivityIcon(String(activity.type));
               return (
                 <div key={`${String(activity.type)}-${index}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <IconComponent className={`h-5 w-5 ${color}`} />
                     <div>
-                      <p className="font-medium">{String(activity.title)}</p>
-                      <p className="text-sm text-muted-foreground">{String(activity.description)}</p>
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground">{activity.description}</p>
                     </div>
                   </div>
-                  <Badge variant="secondary">{String(activity.time)}</Badge>
+                  <Badge variant="secondary">{activity.time}</Badge>
                 </div>
               );
             })}

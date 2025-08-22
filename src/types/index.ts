@@ -251,3 +251,17 @@ export interface SessionConflict {
   resolvedBy?: string;
   createdAt: string;
 }
+
+// Activity types for dashboard feeds
+export interface Activity {
+  type: string;
+  title: string;
+  description: string;
+  time: string;
+  timestamp: string;
+  // Optional additional properties based on activity type
+  sessionTitle?: string;
+  memberName?: string;
+  trainerName?: string;
+  status?: string;
+}

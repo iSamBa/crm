@@ -6,6 +6,7 @@ import {
   type UpdateMemberData, 
   type MemberFilters 
 } from '@/lib/schemas';
+import { type Member } from '@/types';
 
 // =============================================
 // QUERY HOOKS
@@ -140,7 +141,7 @@ export function useUpdateMember() {
       const previousMember = queryClient.getQueryData(queryKeys.members.detail(variables.id));
 
       // Optimistically update to the new value
-      queryClient.setQueryData(queryKeys.members.detail(variables.id), (old: any) => {
+      queryClient.setQueryData(queryKeys.members.detail(variables.id), (old: { data?: Member } | undefined) => {
         if (!old?.data) return old;
         return {
           ...old,
@@ -281,7 +282,7 @@ function useMemberStatusMutation(action: string, status: string) {
       
       const previousMember = queryClient.getQueryData(queryKeys.members.detail(id));
       
-      queryClient.setQueryData(queryKeys.members.detail(id), (old: any) => {
+      queryClient.setQueryData(queryKeys.members.detail(id), (old: { data?: Member } | undefined) => {
         if (!old?.data) return old;
         return {
           ...old,
